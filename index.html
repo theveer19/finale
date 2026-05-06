@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIMAZOFLY | Engineering Aesthetic</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+
+<script type="importmap">
+{
+"imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}
+}
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--bg:#D4D4D4;--text:#1A1A1A;--copper:#B06D4D;--copper-light:#C97F5A;
+--cobalt:#2D4263;--cobalt-dark:#1E2D44;--white:#F5F5F5;
+--glass:rgba(255,255,255,0.08);--glass-border:rgba(0,0,0,0.06);
+--glass-light:rgba(0,0,0,0.1);--glass-border-light:rgba(255,255,255,0.08);
+--bulk:#F98284;--bulk-dark:#e06c6e;--bulk-glow:rgba(249,130,132,.35);
+--bulk-bg:#DCAE96;--bulk-bg-dark:#c9a088;--bulk-text:#2a1a10;
+--footer-bg-1:#e156bc;--footer-bg-2:#dbcb8a;
+--footer-text:#000000;
+--footer-border:rgba(0,0,0,.1);
+--footer-border-subtle:rgba(0,0,0,.06);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:auto;}
+html.lenis{height:auto;}
+.lenis.lenis-smooth{scroll-behavior:auto!important;}
+
+body{
+background:var(--bg);color:var(--text);
+font-family:'Inter',sans-serif;
+overflow-x:hidden;
+transition:background 1.2s cubic-bezier(.16,1,.3,1),color 1.2s cubic-bezier(.16,1,.3,1);
+}
+
+body::after{
+content:'';position:fixed;inset:0;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+opacity:0.06;pointer-events:none;z-index:9999;
+}
+
+#webgl{position:fixed;inset:0;z-index:12;pointer-events:none;}
+#particles{position:fixed;inset:0;z-index:13;pointer-events:none;}
+
+#cursor{
+width:10px;height:10px;background:var(--bulk);border-radius:50%;
+position:fixed;z-index:100001;pointer-events:none;
+transition:background .3s,width .3s,height .3s;display:none;
+box-shadow:0 0 8px rgba(249,130,132,.5);
+}
+#cursor-ring{
+width:44px;height:44px;border:2px solid var(--bulk);border-radius:50%;
+position:fixed;z-index:100000;pointer-events:none;
+transition:transform .4s cubic-bezier(.23,1,.32,1),width .4s,height .4s,border-color .3s,background .3s,opacity .3s;
+display:none;opacity:.7;box-shadow:0 0 12px rgba(249,130,132,.15);
+}
+@media(hover:hover)and (pointer:fine){
+    #cursor,#cursor-ring{display:block;}
+    *{cursor:none !important;}
+}
+body:has(.mag-on) #cursor{width:6px;height:6px;background:var(--copper);}
+body:has(.mag-on) #cursor-ring{width:64px;height:64px;border-color:var(--copper);background:rgba(176,109,77,.06);}
+
+#progress{position:fixed;top:0;left:0;height:2px;width:0%;z-index:99999;transform-origin:left;background:linear-gradient(90deg,var(--copper),var(--cobalt));opacity:.5;}
+
+.hud{position:fixed;right:clamp(12px,2.5vw,40px);top:50%;transform:translateY(-50%);z-index:100;font-family:'Syncopate';font-size:10px;display:flex;flex-direction:column;gap:24px;opacity:.2;letter-spacing:2px;}
+.hud-item{position:relative;padding-left:14px;}
+.hud-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--text);transition:background .4s,width .4s;}
+.hud-item.active::before{width:18px;border-radius:4px;background:var(--copper);}
+
+nav{position:fixed;top:0;width:100%;z-index:500;padding:clamp(16px,3.5vw,40px) clamp(16px,4vw,60px);display:flex;justify-content:space-between;align-items:center;font-family:'Syncopate';font-size:clamp(10px,1.1vw,11px);letter-spacing:clamp(4px,.8vw,10px);color:var(--text);transition:background .5s,backdrop-filter .5s,color .5s,padding .3s;}
+nav.scrolled-light{background:rgba(212,212,212,.75);backdrop-filter:blur(20px);padding-top:14px;padding-bottom:14px;}
+nav.scrolled-dark{background:rgba(26,26,26,.75);backdrop-filter:blur(20px);color:var(--white);padding-top:14px;padding-bottom:14px;}
+.nav-logo{font-weight:700;cursor:pointer;}
+.nav-logo span{display:inline-block;transition:transform .5s cubic-bezier(.23,1,.32,1);}
+.nav-logo:hover span:nth-child(odd){transform:translateY(-3px);}
+.nav-logo:hover span:nth-child(even){transform:translateY(3px);}
+.nav-links{display:flex;gap:clamp(12px,2.5vw,40px);}
+.nav-links a{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:400;opacity:.35;text-decoration:none;color:inherit;transition:.3s;position:relative;font-family:'Inter';}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--copper);transition:width .5s cubic-bezier(.23,1,.32,1);}
+.nav-links a:hover{opacity:1;}
+.nav-links a:hover::after{width:100%;}
+.nav-cta{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:8px 20px;border:1px solid rgba(26,26,26,.12);border-radius:100px;background:rgba(255,255,255,.3);backdrop-filter:blur(10px);cursor:pointer;transition:.4s cubic-bezier(.23,1,.32,1);color:inherit;font-family:'Inter';white-space:nowrap;}
+.nav-cta:hover{background:var(--text);color:var(--white);border-color:var(--text);}
+
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;z-index:510;padding:8px;background:none;border:none;}
+.hamburger span{display:block;width:20px;height:1.5px;background:var(--text);transition:.4s cubic-bezier(.23,1,.32,1);transform-origin:center;}
+.hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0);}
+.hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+.mobile-menu{position:fixed;inset:0;z-index:490;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;opacity:0;visibility:hidden;transition:opacity .6s,visibility .6s;}
+.mobile-menu.open{opacity:1;visibility:visible;}
+.mobile-menu a{font-family:'Syncopate';font-size:clamp(18px,5vw,36px);font-weight:700;letter-spacing:3px;text-decoration:none;color:var(--text);opacity:.12;transition:.4s;transform:translateY(16px);}
+.mobile-menu.open a{opacity:1;transform:translateY(0);}
+.mobile-menu a:hover{color:var(--copper);}
+
+#hero{height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;position:relative;z-index:20;}
+#bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.8;filter:contrast(1.15) brightness(.9);}
+.hero-title{font-family:'Syncopate';font-size:clamp(70px,22vw,320px);color:#fff;z-index:10;letter-spacing:clamp(-3vw,-.5vw,-2vw);mix-blend-mode:overlay;opacity:0;transform:scale(1.1);}
+.hero-sub{position:absolute;bottom:clamp(20px,5vw,48px);left:50%;transform:translateX(-50%);z-index:10;font-size:clamp(7px,1.2vw,9px);letter-spacing:clamp(3px,1vw,6px);text-transform:uppercase;color:rgba(255,255,255,.2);opacity:0;white-space:nowrap;}
+.hero-scroll{position:absolute;bottom:clamp(20px,5vw,48px);left:clamp(16px,4vw,60px);z-index:10;display:flex;align-items:center;gap:10px;opacity:0;}
+.hero-scroll span{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.15);writing-mode:vertical-lr;}
+.hero-scroll .sline{width:1px;height:40px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;}
+.hero-scroll .sline::after{content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;background:var(--copper);animation:sp 2s ease-in-out infinite;}
+@keyframes sp{0%{top:-100%}50%{top:100%}100%{top:100%}}
+
+.marquee-band{position:relative;z-index:20;overflow:hidden;padding:10px 0;border-top:1px solid rgba(0,0,0,.04);border-bottom:1px solid rgba(0,0,0,.04);transition:border-color .8s;}
+.marquee-band.dark-band{border-color:rgba(255,255,255,.04);}
+.marquee-track{display:flex;gap:clamp(24px,4vw,48px);width:max-content;will-change:transform;}
+.marquee-track.fwd{animation:mq 30s linear infinite;}
+.marquee-track.rev{animation:mq 38s linear infinite reverse;}
+.mt-item{font-family:'Syncopate';font-size:clamp(7px,1vw,9px);letter-spacing:clamp(2px,.5vw,4px);text-transform:uppercase;opacity:.08;white-space:nowrap;transition:opacity .4s;}
+.marquee-band:hover .mt-item{opacity:.22;}
+.mt-dot{opacity:.05;font-size:9px;}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.prod-section{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;position:relative;z-index:20;overflow:hidden;padding:clamp(24px,5vh,0) 0;}
+.stage-container{width:92%;max-width:1400px;height:clamp(55vh,72vh,80vh);display:flex;align-items:center;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(15px);position:relative;overflow:hidden;transition:border-color .5s;}
+.stage-container:hover{border-color:rgba(0,0,0,.1);}
+.stage-container.dark-stage{background:var(--glass-light);border-color:var(--glass-border-light);}
+.stage-container.dark-stage:hover{border-color:rgba(255,255,255,.1);}
+.line-detail{position:absolute;top:0;left:0;width:100%;height:2px;transform:scaleX(0);transform-origin:left;z-index:10;}
+.line-detail.copper{background:var(--copper);}
+.line-detail.cobalt{background:var(--cobalt);}
+.line-detail.white{background:var(--white);}
+.content{padding:0 clamp(20px,5%,8%);width:55%;z-index:5;min-width:0;}
+.artifact-tag{font-size:clamp(7px,.9vw,9px);letter-spacing:clamp(3px,.6vw,5px);opacity:.3;display:block;margin-bottom:clamp(12px,2vw,20px);font-weight:600;}
+.content h2{font-family:'Syncopate';font-size:clamp(32px,6vw,110px);line-height:.8;margin-bottom:clamp(14px,2vw,24px);letter-spacing:clamp(-2px,-.5vw,-6px);}
+.content p{font-size:clamp(11px,1.1vw,15px);opacity:.4;line-height:1.8;max-width:380px;font-weight:300;}
+.spec-row{display:flex;gap:clamp(14px,2.5vw,36px);margin-top:clamp(16px,2.5vw,28px);flex-wrap:wrap;}
+.spec-val{font-family:'Syncopate';font-size:clamp(16px,2vw,28px);font-weight:700;letter-spacing:-1px;}
+.spec-label{font-size:clamp(7px,.75vw,8px);letter-spacing:2.5px;text-transform:uppercase;opacity:.2;margin-top:4px;}
+.cta-stage{display:inline-flex;align-items:center;gap:12px;font-size:clamp(8px,.9vw,9px);letter-spacing:3px;text-transform:uppercase;font-weight:600;border:none;background:none;cursor:pointer;color:inherit;padding:0;margin-top:clamp(16px,2.5vw,28px);position:relative;overflow:hidden;font-family:'Inter';}
+.cta-stage::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;background:var(--copper);transform:scaleX(0);transform-origin:left;transition:transform .6s cubic-bezier(.23,1,.32,1);}
+.cta-stage:hover::after{transform:scaleX(1);}
+.cta-arrow{display:inline-block;transition:transform .5s cubic-bezier(.23,1,.32,1);color:var(--copper);}
+.cta-stage:hover .cta-arrow{transform:translateX(8px);}
+.visual-frame{position:absolute;right:4%;width:clamp(28%,40%,45%);height:110%;overflow:hidden;box-shadow:0 50px 100px rgba(0,0,0,.15);transform:translateY(10%);}
+.artifact-img{width:100%;height:100%;object-fit:cover;transform:scale(1.4);filter:grayscale(100%) contrast(1.05);transition:transform 1.2s cubic-bezier(.23,1,.32,1),filter 1s;}
+.stage-container:hover .artifact-img{transform:scale(1.1);filter:grayscale(0%) contrast(1);}
+.prod-ghost{position:absolute;font-family:'Syncopate';font-size:clamp(60px,16vw,200px);font-weight:700;opacity:.02;letter-spacing:-6px;z-index:1;pointer-events:none;top:50%;transform:translateY(-50%);}
+.prod-ghost.left{left:-1%;}
+.prod-ghost.right{right:-1%;}
+.dark-text .artifact-tag{color:var(--white);}
+.dark-text h2{color:var(--white);}
+.dark-text p{color:var(--white);}
+.dark-text .spec-label{color:var(--white);}
+
+#slider-section{height:100vh;height:100dvh;position:relative;z-index:20;overflow:hidden;background:linear-gradient(160deg,#0a0a0a 0%,#1a1a1a 50%,#0a0a0a 100%);}
+.slider-wrap{position:relative;width:100%;height:100%;}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;}
+.slide.active{opacity:1;visibility:visible;}
+.slide-bg{position:absolute;inset:-40px;background-size:cover;background-position:center;transition:transform 12s cubic-bezier(.23,1,.32,1);filter:grayscale(60%) contrast(1.1) brightness(.7);}
+.slide.active .slide-bg{transform:scale(1.06);}
+.slide-overlay{position:absolute;inset:0;pointer-events:none;}
+.slide-content{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(20px,8vw,10%);max-width:600px;}
+.slide-content.right-align{margin-left:auto;text-align:right;}
+.slide-ghost{position:absolute;font-family:'Syncopate';font-size:clamp(60px,22vw,260px);font-weight:700;opacity:0;line-height:1;pointer-events:none;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.02);letter-spacing:-6px;}
+.slide-content.right-align .slide-ghost{right:-2%;left:auto;}
+.slide-content:not(.right-align) .slide-ghost{left:-2%;}
+.slide-tag{font-size:clamp(7px,.9vw,9px);letter-spacing:clamp(3px,.7vw,5px);text-transform:uppercase;font-weight:600;color:var(--copper-light);display:block;margin-bottom:clamp(10px,1.5vw,16px);}
+.slide-title{font-family:'Syncopate';font-size:clamp(48px,12vw,160px);line-height:.85;color:#fff;margin-bottom:clamp(8px,1.2vw,14px);letter-spacing:clamp(-2px,-.4vw,-4px);}
+.slide-desc{font-size:clamp(10px,1.1vw,14px);line-height:2;color:rgba(255,255,255,.35);max-width:380px;margin-bottom:clamp(16px,2.5vw,28px);font-weight:300;}
+.slide-content.right-align .slide-desc{margin-left:auto;}
+.slide-specs{display:flex;gap:clamp(12px,2.5vw,32px);flex-wrap:wrap;}
+.slide-content.right-align .slide-specs{justify-content:flex-end;}
+.ssv{font-family:'Syncopate';font-size:clamp(14px,1.8vw,22px);font-weight:700;color:#fff;letter-spacing:-1px;}
+.ssl{font-size:clamp(7px,.75vw,8px);letter-spacing:2.5px;text-transform:uppercase;color:var(--copper-light);margin-top:2px;display:block;}
+.slider-dots{position:absolute;left:clamp(10px,2.5vw,40px);top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;gap:10px;}
+.slider-dot{width:3px;height:24px;border:none;background:rgba(255,255,255,.08);border-radius:4px;cursor:pointer;transition:all .5s cubic-bezier(.23,1,.32,1);padding:0;position:relative;overflow:hidden;}
+.slider-dot::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:0%;background:var(--copper);border-radius:4px;transition:height .5s cubic-bezier(.23,1,.32,1);}
+.slider-dot.active{height:40px;}
+.slider-dot.active::after{height:100%;}
+.slider-dot:hover{background:rgba(255,255,255,.15);}
+.slider-arrows{position:absolute;right:clamp(10px,2.5vw,40px);top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;gap:8px;}
+.slider-arrow{width:clamp(36px,4.5vw,48px);height:clamp(36px,4.5vw,48px);border:1px solid rgba(255,255,255,.08);border-radius:50%;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);color:rgba(255,255,255,.35);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.4s cubic-bezier(.23,1,.32,1);}
+.slider-arrow:hover{background:rgba(176,109,77,.2);border-color:var(--copper);color:#fff;transform:scale(1.1);}
+.slider-counter{position:absolute;bottom:clamp(16px,3.5vw,40px);left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:baseline;gap:8px;font-family:'Syncopate';font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.15);}
+.slider-counter .cur{color:var(--copper-light);font-size:13px;}
+.slider-progress{position:absolute;bottom:0;left:0;width:100%;height:2px;background:rgba(255,255,255,.03);z-index:10;overflow:hidden;}
+.slider-progress-bar{width:100%;height:100%;background:linear-gradient(90deg,var(--copper),var(--cobalt));transform-origin:left;transform:scaleX(0);}
+
+#philosophy{min-height:65vh;min-height:65dvh;display:flex;align-items:center;justify-content:center;padding:clamp(48px,8vw,120px) clamp(20px,6vw,12%);text-align:center;position:relative;z-index:20;overflow:hidden;}
+.ph-bg{position:absolute;font-family:'Syncopate';font-size:clamp(50px,16vw,200px);font-weight:700;opacity:.015;letter-spacing:-6px;pointer-events:none;user-select:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
+.ph-quote{font-family:'Inter';font-weight:300;font-size:clamp(16px,2.8vw,40px);line-height:1.5;max-width:800px;opacity:.7;letter-spacing:-.3px;}
+.ph-attr{display:block;font-size:clamp(7px,.9vw,9px);letter-spacing:clamp(3px,.8vw,5px);text-transform:uppercase;opacity:.15;margin-bottom:clamp(16px,2vw,24px);font-weight:600;color:var(--copper);}
+
+#hscroll-wrap{position:relative;z-index:20;overflow:hidden;}
+.hscroll-header{padding:clamp(28px,4vw,60px) clamp(20px,6vw,8%) 12px;position:relative;z-index:2;}
+.hscroll-label{font-size:clamp(7px,.9vw,9px);letter-spacing:clamp(3px,.7vw,5px);text-transform:uppercase;font-weight:600;opacity:.2;display:block;margin-bottom:10px;color:var(--copper);}
+.hscroll-title{font-family:'Syncopate';font-size:clamp(24px,5vw,72px);line-height:.95;letter-spacing:-3px;}
+#hscroll-inner{display:flex;align-items:stretch;gap:2px;width:max-content;padding:0;}
+.hcard{width:clamp(240px,28vw,360px);height:clamp(320px,52vh,480px);flex-shrink:0;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);position:relative;overflow:hidden;margin:clamp(16px,3vh,50px) clamp(4px,.8vw,10px);transition:border-color .4s,transform .5s cubic-bezier(.23,1,.32,1);}
+.hcard:hover{border-color:rgba(176,109,77,.2);transform:translateY(-6px);}
+.hcard-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(80%) contrast(1.05) brightness(.85);transition:filter 1s cubic-bezier(.23,1,.32,1),transform 1.2s cubic-bezier(.23,1,.32,1);transform:scale(1.15);}
+.hcard:hover .hcard-img{filter:grayscale(0%) contrast(1.05) brightness(.95);transform:scale(1.05);}
+.hcard-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,.1) 50%,rgba(0,0,0,.3) 100%);z-index:1;transition:opacity .6s;}
+.hcard:hover .hcard-overlay{opacity:.85;}
+.hcard-num{position:absolute;top:clamp(14px,2vw,28px);left:clamp(14px,2vw,28px);font-family:'Syncopate';font-size:clamp(28px,4vw,56px);font-weight:700;opacity:.08;line-height:1;z-index:2;color:#fff;}
+.hcard-bottom{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:clamp(16px,2.5vw,32px) clamp(14px,2vw,28px);}
+.hcard-tag{font-size:clamp(6px,.65vw,7px);letter-spacing:clamp(2px,.4vw,3px);text-transform:uppercase;font-weight:600;opacity:.5;margin-bottom:6px;color:var(--bulk);display:block;}
+.hcard-title{font-family:'Syncopate';font-size:clamp(10px,1.1vw,15px);font-weight:700;letter-spacing:.5px;margin-bottom:6px;color:#fff;line-height:1.3;}
+.hcard-text{font-size:clamp(8px,.85vw,10.5px);line-height:1.7;opacity:.45;font-weight:300;color:rgba(255,255,255,.8);}
+
+#tech{padding:clamp(40px,7vw,120px) clamp(12px,4vw,8%);position:relative;z-index:20;}
+.bento-head{margin-bottom:clamp(24px,4vw,64px);}
+.bento-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1vw,14px);}
+.bc{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.05);padding:clamp(20px,2.5vw,44px) clamp(16px,2vw,40px);backdrop-filter:blur(15px);position:relative;overflow:hidden;transition:transform .6s cubic-bezier(.23,1,.32,1),border-color .4s;cursor:default;}
+.bc:hover{transform:translateY(-6px);border-color:rgba(176,109,77,.12);}
+.bc::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;transform:scaleX(0);transform-origin:left;transition:transform .6s cubic-bezier(.23,1,.32,1);}
+.bc:hover::before{transform:scaleX(1);}
+.bc:nth-child(1)::before{background:var(--copper);}
+.bc:nth-child(2)::before{background:var(--cobalt);}
+.bc:nth-child(3)::before{background:var(--copper);}
+.bc:nth-child(4)::before{background:var(--cobalt);}
+.bc-ghost{position:absolute;bottom:-10px;right:10px;font-family:'Syncopate';font-size:clamp(36px,6vw,80px);font-weight:700;opacity:.02;line-height:1;pointer-events:none;letter-spacing:-4px;}
+.bc-num{font-size:clamp(7px,.75vw,8px);letter-spacing:clamp(2px,.5vw,4px);text-transform:uppercase;font-weight:600;opacity:.15;margin-bottom:12px;font-family:'Syncopate';}
+.bc-title{font-family:'Syncopate';font-size:clamp(8px,.9vw,11px);letter-spacing:1px;font-weight:700;margin-bottom:10px;text-transform:uppercase;}
+.bc-body{font-size:clamp(9px,1vw,12px);line-height:1.9;opacity:.3;font-weight:300;}
+
+#values{padding:0 clamp(12px,4vw,8%) clamp(40px,7vw,100px);position:relative;z-index:20;}
+.val-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.vb{padding:clamp(20px,3vw,48px) clamp(14px,1.8vw,32px);border:1px solid var(--glass-border);border-left:none;transition:background .5s,transform .5s;position:relative;overflow:hidden;}
+.vb:first-child{border-left:1px solid var(--glass-border);}
+.vb:hover{background:rgba(255,255,255,.15);transform:translateY(-4px);}
+.vb::before{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.23,1,.32,1);}
+.vb:nth-child(1)::before{background:var(--copper);}
+.vb:nth-child(2)::before{background:var(--cobalt);}
+.vb:nth-child(3)::before{background:var(--copper);}
+.vb:nth-child(4)::before{background:var(--cobalt);}
+.vb:hover::before{transform:scaleX(1);}
+.vb-sym{font-size:10px;letter-spacing:6px;opacity:.12;margin-bottom:12px;display:block;font-family:'Syncopate';}
+.vb-title{font-family:'Syncopate';font-size:clamp(8px,.9vw,10px);font-weight:700;letter-spacing:.5px;margin-bottom:8px;}
+.vb-text{font-size:clamp(9px,.95vw,11px);line-height:1.85;opacity:.25;font-weight:300;}
+
+#about{padding:0 clamp(12px,4vw,8%) clamp(40px,7vw,100px);position:relative;z-index:20;}
+.about-inner{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--glass-border);overflow:hidden;transition:border-color .5s;}
+.about-inner:hover{border-color:rgba(255,255,255,.08);}
+.about-left{padding:clamp(24px,4.5vw,72px);background:rgba(0,0,0,.02);border-right:1px solid var(--glass-border);}
+.about-right{padding:clamp(24px,4.5vw,72px);}
+.about-head{font-family:'Syncopate';font-size:clamp(24px,4vw,64px);line-height:.9;margin-bottom:clamp(20px,3vw,28px);letter-spacing:-3px;font-weight:700;}
+.about-body{font-size:clamp(10px,1.1vw,13px);line-height:2;opacity:.3;margin-bottom:12px;font-weight:300;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2.5vw,28px);margin-top:clamp(20px,3vw,32px);padding-top:clamp(20px,3vw,32px);border-top:1px solid var(--glass-border);}
+.stat-v{font-family:'Syncopate';font-size:clamp(18px,2.5vw,32px);font-weight:700;letter-spacing:-2px;color:var(--copper);}
+.stat-l{font-size:clamp(7px,.7vw,8px);letter-spacing:3px;text-transform:uppercase;opacity:.18;margin-top:4px;}
+
+#studio{padding:0 clamp(12px,4vw,8%) clamp(40px,7vw,100px);position:relative;z-index:20;}
+.studio-row{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1vw,14px);margin-top:clamp(20px,3.5vw,56px);}
+.sc{padding:clamp(20px,3vw,44px) clamp(16px,2vw,36px);border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(10px);position:relative;overflow:hidden;transition:transform .6s cubic-bezier(.23,1,.32,1),border-color .4s;}
+.sc:hover{transform:translateY(-6px);border-color:rgba(176,109,77,.1);}
+.sc::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.23,1,.32,1);background:var(--copper);}
+.sc:hover::before{transform:scaleX(1);}
+.sc-idx{font-family:'Syncopate';font-size:clamp(7px,.7vw,8px);letter-spacing:3px;opacity:.12;margin-bottom:16px;display:block;}
+.sc-title{font-family:'Syncopate';font-size:clamp(8px,.9vw,11px);font-weight:700;margin-bottom:10px;letter-spacing:.5px;}
+.sc-text{font-size:clamp(9px,.95vw,11px);line-height:1.85;opacity:.25;font-weight:300;}
+.sc-bg{position:absolute;bottom:-20px;right:-6px;font-family:'Syncopate';font-size:clamp(40px,7vw,100px);font-weight:700;opacity:.015;line-height:1;pointer-events:none;letter-spacing:-4px;}
+
+#certs{padding:0 clamp(12px,4vw,8%) clamp(40px,7vw,100px);position:relative;z-index:20;}
+.cert-pills{display:flex;flex-wrap:wrap;gap:clamp(4px,.6vw,8px);margin-top:clamp(16px,2.5vw,40px);}
+.cp{padding:clamp(7px,.8vw,10px) clamp(12px,1.5vw,18px);border-radius:2px;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(8px);font-size:clamp(6.5px,.8vw,9px);letter-spacing:clamp(1px,.3vw,2px);text-transform:uppercase;font-weight:600;opacity:.3;transition:.4s cubic-bezier(.23,1,.32,1);cursor:default;}
+.cp:hover{opacity:1;background:rgba(176,109,77,.08);border-color:var(--copper);color:var(--copper);transform:translateY(-2px);}
+
+footer{
+position:relative;z-index:20;overflow:hidden;
+background:linear-gradient(135deg, var(--footer-bg-1) 0%, #d98aa8 20%, var(--footer-bg-2) 50%, #d98aa8 80%, var(--footer-bg-1) 100%);
+background-size:300% 300%;
+animation:footerShimmer 12s ease infinite;
+color:var(--footer-text);
+}
+@keyframes footerShimmer{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+.footer-giant{
+font-family:'Syncopate';font-size:clamp(40px,14vw,220px);font-weight:700;
+letter-spacing:-6px;opacity:.06;text-align:center;line-height:.85;
+padding:0 4% 0;pointer-events:none;user-select:none;margin-bottom:-20px;
+color:#000;
+-webkit-text-stroke:1px rgba(0,0,0,.08);
+}
+.footer-body{
+padding:clamp(28px,5vw,72px) clamp(16px,4vw,8%) clamp(20px,3vw,44px);
+border-top:1px solid var(--footer-border);
+display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:clamp(16px,3.5vw,52px);
+}
+.f-logo-img{height:clamp(32px,4vw,52px);width:auto;margin-bottom:10px;opacity:.85;}
+.f-tagline{font-size:clamp(11px,1.2vw,16px);font-weight:300;opacity:.45;line-height:1.5;margin-bottom:20px;color:#000;font-style:italic;}
+.f-addr{font-size:clamp(9px,.95vw,11px);opacity:.4;line-height:1.9;letter-spacing:.3px;color:#000;}
+.f-addr strong{opacity:.6;display:block;margin-bottom:4px;}
+.f-addr a{text-decoration:none;color:#000;opacity:.5;transition:.2s;}
+.f-addr a:hover{opacity:.9;color:#000;text-decoration:underline;}
+.f-col-label{font-size:clamp(7px,.7vw,8px);letter-spacing:clamp(2px,.5vw,4px);text-transform:uppercase;font-weight:600;opacity:.35;margin-bottom:12px;color:#000;}
+.f-links{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.f-links a{font-size:clamp(9px,.95vw,12px);opacity:.4;text-decoration:none;color:#000;letter-spacing:.3px;transition:.3s;position:relative;display:inline-block;font-weight:300;}
+.f-links a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:#000;transition:width .4s cubic-bezier(.23,1,.32,1);}
+.f-links a:hover{opacity:.9;}
+.f-links a:hover::after{width:100%;}
+.footer-bottom{padding:12px clamp(16px,4vw,8%);border-top:1px solid var(--footer-border-subtle);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.f-copy{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.3;color:#000;}
+.f-legal{display:flex;gap:14px;}
+.f-legal a{font-size:9px;letter-spacing:1px;opacity:.2;text-decoration:none;color:#000;transition:.2s;}
+.f-legal a:hover{opacity:.6;}
+
+.s-label{font-size:clamp(7px,.9vw,9px);letter-spacing:clamp(3px,.7vw,5px);text-transform:uppercase;font-weight:600;opacity:.18;display:block;margin-bottom:10px;color:var(--copper);}
+.s-head{font-family:'Syncopate';font-size:clamp(24px,4.5vw,72px);line-height:.95;margin-bottom:6px;letter-spacing:-3px;}
+.s-sub{font-size:clamp(8px,.9vw,12px);font-weight:600;opacity:.35;letter-spacing:1px;}
+.rv{opacity:0;transform:translateY(28px);}
+
+#bulk-btn{
+position:fixed;bottom:clamp(16px,3vw,36px);right:clamp(16px,3vw,36px);
+z-index:1000;font-family:'Inter';font-size:clamp(9px,1vw,11px);font-weight:600;
+letter-spacing:2px;text-transform:uppercase;
+padding:clamp(12px,1.5vw,16px) clamp(20px,2.5vw,32px);
+background:var(--bulk);color:#fff;border:none;border-radius:100px;
+cursor:pointer;box-shadow:0 8px 32px var(--bulk-glow),0 2px 8px rgba(0,0,0,.15);
+transition:transform .4s cubic-bezier(.23,1,.32,1),box-shadow .4s,background .3s;
+display:flex;align-items:center;gap:10px;
+}
+#bulk-btn:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 12px 40px var(--bulk-glow),0 4px 12px rgba(0,0,0,.25);background:var(--bulk-dark);}
+#bulk-btn .btn-pulse{position:absolute;inset:-4px;border-radius:100px;border:2px solid var(--bulk);opacity:0;animation:bpulse 2.5s ease-out infinite;}
+@keyframes bpulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.35);opacity:0}}
+
+#bulk-modal{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s cubic-bezier(.23,1,.32,1),visibility .5s;}
+#bulk-modal.open{opacity:1;visibility:visible;}
+.bulk-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);}
+.bulk-content{position:relative;z-index:2;width:94%;max-width:960px;max-height:90vh;background:var(--bulk-bg);border:1px solid rgba(180,140,110,.2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transform:translateY(50px) scale(.95);transition:transform .7s cubic-bezier(.23,1,.32,1);box-shadow:0 40px 100px rgba(0,0,0,.2),0 0 60px rgba(220,174,150,.15);}
+#bulk-modal.open .bulk-content{transform:translateY(0) scale(1);}
+.bulk-top-bar{height:3px;background:linear-gradient(90deg,var(--bulk),var(--bulk-dark),var(--bulk));background-size:200% 100%;animation:barShimmer 3s ease infinite;}
+@keyframes barShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.bulk-header{padding:clamp(20px,3vw,36px) clamp(20px,4vw,40px) clamp(12px,2vw,20px);border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;}
+.bulk-header-row{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+.bulk-header-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--bulk),var(--bulk-dark));display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
+.bulk-header h2{font-family:'Syncopate';font-size:clamp(13px,2vw,20px);color:var(--bulk-text);letter-spacing:2px;}
+.bulk-header p{font-size:clamp(10px,1.1vw,13px);color:rgba(42,26,16,.4);margin-top:4px;font-weight:300;}
+.bulk-header p span{color:var(--bulk);font-weight:600;}
+.bulk-close{position:absolute;top:clamp(12px,2vw,20px);right:clamp(12px,2vw,20px);width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.5);color:rgba(42,26,16,.4);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s;z-index:3;backdrop-filter:blur(4px);}
+.bulk-close:hover{background:var(--bulk);border-color:var(--bulk);color:#fff;transform:rotate(90deg);}
+.bulk-scroll{overflow-y:auto;flex:1;padding:clamp(16px,2.5vw,28px) clamp(20px,4vw,40px);max-height:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(249,130,132,.25) transparent;}
+.bulk-scroll::-webkit-scrollbar{width:4px;}
+.bulk-scroll::-webkit-scrollbar-track{background:transparent;}
+.bulk-scroll::-webkit-scrollbar-thumb{background:rgba(249,130,132,.25);border-radius:4px;}
+.bulk-scroll::-webkit-scrollbar-thumb:hover{background:rgba(249,130,132,.45);}
+.bulk-products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(10px,1.2vw,14px);}
+.bp-card{background:rgba(255,255,255,.45);border:1px solid rgba(0,0,0,.06);border-radius:8px;overflow:hidden;transition:transform .4s cubic-bezier(.23,1,.32,1),border-color .3s,background .3s,box-shadow .3s;position:relative;backdrop-filter:blur(4px);}
+.bp-card:hover{transform:translateY(-4px);border-color:rgba(249,130,132,.2);background:rgba(255,255,255,.65);box-shadow:0 8px 24px rgba(0,0,0,.06);}
+.bp-card.selected{border-color:var(--bulk);background:rgba(249,130,132,.08);box-shadow:0 0 20px rgba(249,130,132,.12);}
+.bp-card-img-wrap{position:relative;width:100%;height:130px;overflow:hidden;}
+.bp-card-img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%) contrast(1.02) brightness(.95);transition:filter .5s,transform .6s;}
+.bp-card:hover .bp-card-img,.bp-card.selected .bp-card-img{filter:grayscale(0%) contrast(1.05) brightness(1);transform:scale(1.05);}
+.bp-card-badge{position:absolute;top:8px;left:8px;font-size:7px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;padding:3px 8px;border-radius:3px;background:var(--bulk);color:#fff;opacity:0;transition:opacity .3s;}
+.bp-card.selected .bp-card-badge{opacity:1;}
+.bp-card-info{padding:clamp(10px,1.2vw,14px);}
+.bp-card-name{font-family:'Syncopate';font-size:clamp(7px,.8vw,9px);font-weight:700;color:var(--bulk-text);letter-spacing:.5px;margin-bottom:3px;}
+.bp-card-desc{font-size:clamp(8px,.78vw,9px);color:rgba(42,26,16,.35);line-height:1.6;font-weight:300;margin-bottom:10px;}
+.bp-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.bp-qty{display:flex;align-items:center;gap:0;border:1px solid rgba(0,0,0,.08);border-radius:6px;overflow:hidden;background:rgba(255,255,255,.6);}
+.bp-qty button{width:30px;height:30px;border:none;background:rgba(0,0,0,.03);color:rgba(42,26,16,.35);font-size:15px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;font-family:'Inter';}
+.bp-qty button:hover{background:rgba(249,130,132,.15);color:var(--bulk);}
+.bp-qty span{width:36px;text-align:center;font-size:11px;font-weight:700;color:var(--bulk-text);font-family:'Syncopate';}
+.bp-check{width:22px;height:22px;border-radius:6px;border:1.5px solid rgba(0,0,0,.12);background:rgba(255,255,255,.5);cursor:pointer;transition:.3s cubic-bezier(.23,1,.32,1);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bp-check:hover{border-color:rgba(249,130,132,.5);background:rgba(249,130,132,.08);}
+.bp-check.checked{background:var(--bulk);border-color:var(--bulk);box-shadow:0 0 12px var(--bulk-glow);}
+.bp-check.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700;}
+.bulk-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.08),transparent);margin:clamp(18px,2.5vw,30px) 0;}
+.bulk-form-label{font-size:clamp(8px,.8vw,9px);letter-spacing:2px;text-transform:uppercase;color:rgba(42,26,16,.3);font-weight:600;margin-bottom:clamp(10px,1.5vw,16px);display:block;}
+.bulk-form-label span{color:var(--bulk);}
+.bulk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.2vw,14px);}
+.bulk-input{width:100%;padding:clamp(10px,1.2vw,13px) clamp(12px,1.5vw,16px);background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.07);border-radius:6px;color:var(--bulk-text);font-family:'Inter';font-size:clamp(10px,1vw,12px);font-weight:300;transition:border-color .3s,background .3s,box-shadow .3s;outline:none;}
+.bulk-input::placeholder{color:rgba(42,26,16,.2);}
+.bulk-input:focus{border-color:rgba(249,130,132,.4);background:rgba(255,255,255,.75);box-shadow:0 0 0 3px rgba(249,130,132,.08);}
+.bulk-textarea{grid-column:span 2;resize:vertical;min-height:56px;width:100%;padding:clamp(10px,1.2vw,13px) clamp(12px,1.5vw,16px);background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.07);border-radius:6px;color:var(--bulk-text);font-family:'Inter';font-size:clamp(10px,1vw,12px);font-weight:300;transition:border-color .3s,background .3s,box-shadow .3s;outline:none;}
+.bulk-textarea::placeholder{color:rgba(42,26,16,.2);}
+.bulk-textarea:focus{border-color:rgba(249,130,132,.4);background:rgba(255,255,255,.75);box-shadow:0 0 0 3px rgba(249,130,132,.08);}
+.bulk-footer{padding:clamp(14px,2vw,22px) clamp(20px,4vw,40px);border-top:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;background:rgba(255,255,255,.15);}
+.bulk-selected-count{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(42,26,16,.3);font-weight:400;}
+.bulk-selected-count span{color:var(--bulk);font-family:'Syncopate';font-size:14px;font-weight:700;}
+.bulk-submit{font-family:'Inter';font-size:clamp(9px,1vw,11px);font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:clamp(11px,1.4vw,14px) clamp(28px,3.5vw,44px);background:linear-gradient(135deg,var(--bulk),var(--bulk-dark));color:#fff;border:none;border-radius:100px;cursor:pointer;transition:.4s cubic-bezier(.23,1,.32,1);position:relative;overflow:hidden;}
+.bulk-submit::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s;}
+.bulk-submit:hover::before{left:100%;}
+.bulk-submit:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--bulk-glow);}
+.bulk-submit:disabled{opacity:.25;cursor:not-allowed;transform:none;box-shadow:none;}
+.bulk-submit:disabled::before{display:none;}
+
+.toast{position:fixed;top:clamp(16px,3vw,36px);right:clamp(16px,3vw,36px);z-index:1000000;padding:clamp(14px,1.8vw,18px) clamp(20px,2.8vw,36px);background:var(--bulk-bg);border:1px solid rgba(249,130,132,.2);border-left:3px solid var(--bulk);border-radius:8px;color:var(--bulk-text);font-size:clamp(10px,1vw,12px);font-weight:400;letter-spacing:.3px;transform:translateX(130%);opacity:0;transition:transform .7s cubic-bezier(.23,1,.32,1),opacity .4s;pointer-events:none;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,.12);}
+.toast.show{transform:translateX(0);opacity:1;pointer-events:auto;}
+.toast .toast-icon{color:var(--bulk);margin-right:8px;font-weight:700;}
+
+@media(max-width:1024px){
+.bento-grid{grid-template-columns:1fr 1fr;}
+.bento-grid .bc:first-child{grid-column:span 2;}
+.bento-grid .bc:nth-child(4){grid-column:span 2;}
+.val-grid{grid-template-columns:1fr 1fr;}
+.vb{border-left:1px solid var(--glass-border);}
+.vb:nth-child(odd){border-right:1px solid var(--glass-border);}
+.footer-body{grid-template-columns:1fr 1fr;gap:24px;}
+}
+@media(max-width:768px){
+.hamburger{display:flex;}
+.nav-links,.nav-cta{display:none;}
+.hud{display:none;}
+.content{width:100%;padding:0 clamp(16px,5%,6%) clamp(20px,4%,6%);}
+.visual-frame{position:relative;right:auto;width:100%;height:45%;transform:none;order:-1;box-shadow:none;margin:0;}
+.visual-frame .artifact-img{transform:scale(1.1);filter:grayscale(60%) contrast(1.05);}
+.stage-container{flex-direction:column;height:auto;min-height:88vh;padding-top:clamp(16px,3%,5%);}
+.stage-container:hover .artifact-img{transform:scale(1.05);filter:grayscale(0%) contrast(1);}
+.slide-content.right-align{text-align:left;margin-left:0;}
+.slide-content.right-align .slide-desc{margin-left:0;}
+.slide-content.right-align .slide-specs{justify-content:flex-start;}
+.slide-content.right-align .slide-ghost{right:auto;left:-2%;}
+.slider-dots{left:8px;gap:6px;}
+.slider-dot{height:16px;width:2px;}
+.slider-dot.active{height:28px;}
+.hero-scroll{display:none;}
+.hero-sub{font-size:7px;letter-spacing:3px;}
+.bento-grid{grid-template-columns:1fr;}
+.bento-grid .bc:first-child,.bento-grid .bc:nth-child(4){grid-column:span 1;}
+.val-grid{grid-template-columns:1fr;}
+.vb,.vb:nth-child(odd){border:none;border-bottom:1px solid var(--glass-border);}
+.about-inner{grid-template-columns:1fr;}
+.about-right,.about-left{padding:clamp(20px,5vw,40px) clamp(16px,4vw,28px);}
+.studio-row{grid-template-columns:1fr;}
+.footer-body{grid-template-columns:1fr;gap:20px;}
+.footer-bottom{flex-direction:column;gap:6px;text-align:center;}
+.bulk-products{grid-template-columns:1fr 1fr;}
+.bulk-form-grid{grid-template-columns:1fr;}
+.bulk-textarea{grid-column:span 1;}
+#bulk-btn{bottom:12px;right:12px;padding:10px 18px;font-size:9px;}
+.bulk-content{max-height:92vh;border-radius:10px 10px 0 0;}
+}
+@media(max-width:480px){
+.spec-row{gap:12px;}
+.cert-pills{gap:4px;}
+.prod-section{min-height:auto;padding:60px 0;}
+.stage-container{min-height:auto;}
+.visual-frame{height:35%;}
+.hero-sub{white-space:normal;text-align:center;max-width:80%;}
+.bulk-products{grid-template-columns:1fr;}
+.hcard{width:clamp(200px,75vw,300px);height:clamp(260px,45vh,380px);}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="progress"></div>
+<canvas id="webgl"></canvas>
+<canvas id="particles"></canvas>
+
+<div class="hud" id="hud"></div>
+
+<nav id="navbar">
+<div class="nav-logo magnetic"><span>D</span><span>I</span><span>M</span><span>A</span><span>Z</span><span>O</span><span>F</span><span>L</span><span>Y</span></div>
+<div class="nav-links" id="nav-links-desktop"></div>
+<button class="nav-cta magnetic" onclick="openBulkModal()">Bulk Inquiry</button>
+<button class="hamburger" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mob-menu"></div>
+
+<button id="bulk-btn" onclick="openBulkModal()"><span class="btn-pulse"></span>Bulk Inquiry</button>
+
+<div id="bulk-modal" aria-hidden="true">
+<div class="bulk-overlay" onclick="closeBulkModal()"></div>
+<div class="bulk-content">
+<div class="bulk-top-bar"></div>
+<button class="bulk-close" onclick="closeBulkModal()" aria-label="Close">✕</button>
+<div class="bulk-header">
+<div class="bulk-header-row"><div class="bulk-header-icon">📦</div><h2>BULK INQUIRY</h2></div>
+<p>Select products & set quantities for <span>wholesale pricing</span></p>
+</div>
+<div class="bulk-scroll">
+<div class="bulk-products" id="bulk-products-grid"></div>
+<div class="bulk-divider"></div>
+<span class="bulk-form-label">Your Details <span>*</span></span>
+<div class="bulk-form-grid">
+<input class="bulk-input" type="text" placeholder="Full Name *" id="b-name" autocomplete="name">
+<input class="bulk-input" type="tel" placeholder="Phone Number *" id="b-phone" autocomplete="tel">
+<input class="bulk-input" type="email" placeholder="Email Address" id="b-email" autocomplete="email">
+<input class="bulk-input" type="text" placeholder="City / State" id="b-city">
+<textarea class="bulk-textarea" placeholder="Additional requirements (customization, delivery timeline, etc.)" id="b-msg"></textarea>
+</div>
+</div>
+<div class="bulk-footer">
+<div class="bulk-selected-count"><span id="sel-count">0</span> product(s) selected</div>
+<button class="bulk-submit" id="bulk-submit-btn" disabled type="button" onclick="submitBulkInquiry()">Send Inquiry</button>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<section id="hero">
+<video id="bg-video" autoplay muted loop playsinline><source src="Dima.mp4" type="video/mp4"></video>
+<div class="hero-sub">RAJKOT · GUJARAT · INDIA · TRUSTED BRAND</div>
+<div class="hero-scroll"><span>Scroll</span><div class="sline"></div></div>
+</section>
+
+<div id="marquees-container"></div>
+<div id="prod-sections-container"></div>
+
+<section id="slider-section">
+<div class="slider-wrap" id="slider-wrap"></div>
+<div class="slider-dots" id="slider-dots"></div>
+<div class="slider-arrows"><button class="slider-arrow" id="sl-prev">←</button><button class="slider-arrow" id="sl-next">→</button></div>
+<div class="slider-counter"><span class="cur">01</span><span>/</span><span id="slider-total">03</span></div>
+<div class="slider-progress"><div class="slider-progress-bar" id="sl-prog"></div></div>
+</section>
+
+<section id="philosophy" data-bg="#D4D4D4" data-text="#1A1A1A">
+<div class="ph-bg">DZO</div>
+<div class="rv" style="position:relative;z-index:2;">
+<p class="ph-quote"><span class="ph-attr">Our Mission // DIMAZOFLY Kitchen Appliances</span>"To deliver high-quality, innovative, and affordable kitchen appliances to every Indian household, enhancing their daily cooking and dining experience — while supporting the Make in India initiative through local manufacturing excellence."</p>
+</div>
+</section>
+
+<div id="hscroll-wrap" data-bg="#D4D4D4" data-text="#1A1A1A">
+<div class="hscroll-header rv">
+<span class="hscroll-label">Our Products</span>
+<h2 class="hscroll-title">THE MAKING<br>OF DIMAZOFLY.</h2>
+</div>
+<div id="hscroll-inner"></div>
+</div>
+
+<section id="tech" data-bg="#2D4263" data-text="#F5F5F5">
+<div class="bento-head rv"><span class="s-label" style="color:var(--copper-light);">Technology & Manufacturing</span><h2 class="s-head" style="color:#fff;">INSIDE<br>THE STUDIO.</h2><p class="s-sub" style="color:rgba(255,255,255,.3);margin-top:6px;">The engineering excellence behind DIMAZOFLY</p></div>
+<div class="bento-grid">
+<div class="bc" style="grid-column:span 2;"><div class="bc-ghost">01</div><div class="bc-num" style="color:var(--copper-light);">01 // Innovation</div><div class="bc-title" style="color:#fff;">Technology & Manufacturing Excellence</div><div class="bc-body" style="color:rgba(255,255,255,.3);">Leveraging modern manufacturing processes, stringent quality control, and continuous innovation to deliver products that meet international standards — all produced locally in India under the Make in India initiative.</div></div>
+<div class="bc rv"><div class="bc-ghost">02</div><div class="bc-num" style="color:var(--copper-light);">02 // Quality</div><div class="bc-title" style="color:#fff;">Quality Assurance</div><div class="bc-body" style="color:rgba(255,255,255,.3);">Multi-stage quality checks ensuring every product meets durability and safety benchmarks before reaching customers.</div></div>
+<div class="bc rv" style="transition-delay:.12s;"><div class="bc-ghost">03</div><div class="bc-num" style="color:var(--copper-light);">03 // Design</div><div class="bc-title" style="color:#fff;">User-Centric Design</div><div class="bc-body" style="color:rgba(255,255,255,.3);">Products designed based on real customer feedback — ergonomic, functional, and aesthetically appealing.</div></div>
+<div class="bc rv" style="transition-delay:.16s;grid-column:span 2;"><div class="bc-ghost">04</div><div class="bc-num" style="color:var(--copper-light);">04 // Make in India</div><div class="bc-title" style="color:#fff;">Local Manufacturing Power</div><div class="bc-body" style="color:rgba(255,255,255,.3);">Factory in Rajkot with dedicated production lines — supporting India's self-reliance mission while creating local employment and reducing import dependency.</div></div>
+</div>
+</section>
+
+<section id="values" data-bg="#D4D4D4" data-text="#1A1A1A">
+<div class="rv" style="padding-bottom:28px;"><span class="s-label">Core Principles</span><h2 class="s-head">WHAT WE<br>STAND FOR.</h2></div>
+<div class="val-grid rv">
+<div class="vb"><span class="vb-sym">◎</span><div class="vb-title">Quality First</div><div class="vb-text">Every product passes strict quality checks before reaching your doorstep.</div></div>
+<div class="vb"><span class="vb-sym">◈</span><div class="vb-title">Affordable Innovation</div><div class="vb-text">International quality at Indian prices — making premium accessible to all.</div></div>
+<div class="vb"><span class="vb-sym">◇</span><div class="vb-title">Customer Trust</div><div class="vb-text">5 million+ orders fulfilled — built on reliability, transparency, and service.</div></div>
+<div class="vb"><span class="vb-sym">○</span><div class="vb-title">Make in India</div><div class="vb-text">Proudly manufacturing locally, reducing imports, and strengthening India's economy.</div></div>
+</div>
+</section>
+
+<section id="about" data-bg="#B06D4D" data-text="#1A1A1A">
+<div class="about-inner rv">
+<div class="about-left"><span class="s-label">About DIMAZOFLY</span><h2 class="about-head">BORN IN<br>RAJKOT.<br>BUILT FOR<br>INDIA.</h2>
+<p class="about-body" style="margin-top:16px;"><strong style="opacity:.6;">Our Vision:</strong> To become India's most trusted and preferred kitchen appliance brand, recognized for quality, innovation, and customer satisfaction.</p>
+<div class="stat-grid"><div><div class="stat-v">2024</div><div class="stat-l">Founded</div></div><div><div class="stat-v">100%</div><div class="stat-l">Made in India</div></div><div><div class="stat-v">5M+</div><div class="stat-l">Orders Fulfilled</div></div><div><div class="stat-v">3+</div><div class="stat-l">Platforms</div></div></div></div>
+<div class="about-right"><p class="about-body"><strong style="opacity:.6;">Dimazofly Kitchen Appliances Pvt. Ltd.</strong> is a fast-growing Indian brand focused on delivering innovative and affordable kitchen solutions across the country.</p><p class="about-body">Having successfully fulfilled over <strong style="opacity:.6;">20k orders</strong> across major platforms like <strong style="opacity:.6;">Amazon, Flipkart, and Meesho</strong>, Dimazofly has built a strong reputation for reliability and performance.</p><p class="about-body" style="margin-bottom:0;">The brand actively supports the <strong style="opacity:.6;">Make in India</strong> initiative by collaborating with local manufacturers to develop high-quality alternatives to imported products.</p></div>
+</div>
+</section>
+
+<section id="studio" data-bg="#635B7D" data-text="#1A1A1A">
+<div class="rv"><span class="s-label">Business Operations</span><h2 class="s-head">HOW WE<br>WORK.</h2></div>
+<div class="studio-row">
+<div class="sc rv"><span class="sc-idx">Discipline // 01</span><div class="sc-title">Product Development</div><div class="sc-text">Identifying and developing high-demand kitchen and gym products based on market research.</div><div class="sc-bg">PD</div></div>
+<div class="sc rv" style="transition-delay:.1s"><span class="sc-idx">Discipline // 02</span><div class="sc-title">Quality Assurance</div><div class="sc-text">Multi-stage quality checks ensuring product durability, safety, and performance standards.</div><div class="sc-bg">QA</div></div>
+<div class="sc rv" style="transition-delay:.2s"><span class="sc-idx">Discipline // 03</span><div class="sc-title">E-Commerce & Distribution</div><div class="sc-text">Selling through Amazon, Flipkart, Meesho with nationwide delivery and wholesale networks.</div><div class="sc-bg">EC</div></div>
+</div>
+</section>
+
+<section id="certs" data-bg="#9491B2" data-text="#1A1A1A">
+<div class="rv"><span class="s-label">Certifications</span><h2 class="s-head">QUALITY YOU<br>CAN TRUST.</h2></div>
+<div class="cert-pills rv">
+<div class="cp">Make in India</div><div class="cp">Food Safe Certified</div><div class="cp">BPA Free</div><div class="cp">Quality Assured</div><div class="cp">Amazon Verified</div><div class="cp">Flipkart Assured</div><div class="cp">Meesho Trusted</div><div class="cp">5M+ Orders</div>
+</div>
+</section>
+
+<footer id="contact">
+<div class="footer-giant">DIMAZOFLY</div>
+<div class="footer-body">
+<div>
+<img src="logo.png" class="f-logo-img" alt="Dimazofly Logo">
+<p class="f-tagline">"Embrace The Empathic Spark of Joy"</p>
+<p class="f-addr"><strong>Office:</strong>306, Shivalay Complex,<br>Mavdi Chowk, Opp. Jitriya Hanuman Temple,<br>Mavdi Main Road, Rajkot - 360004<br><br><strong>Factory:</strong>Surbhi Silver-b, Shed No. A&B,<br>Street No. 1, Ravki Makhavad Road,<br>Rajkot, Gujarat - 360004<br><br><a href="mailto:support@dimazo.in">support@dimazo.in</a><br><a href="tel:+919727643390">+91 9727643390</a><br><a href="https://www.dimazo.in" target="_blank">www.dimazo.in</a></p>
+</div>
+<div><div class="f-col-label">Company</div><ul class="f-links"><li><a href="#about">About Us</a></li><li><a href="#studio">Operations</a></li><li><a href="#tech">Technology</a></li><li><a href="#certs">Certifications</a></li><li><a href="#">Careers</a></li></ul></div>
+<div id="footer-products-col"></div>
+<div><div class="f-col-label">Connect</div><ul class="f-links"><li><a href="#">Instagram</a></li><li><a href="#">LinkedIn</a></li><li><a href="#">Behance</a></li><li><a href="#">Pinterest</a></li></ul><div style="margin-top:20px;"><div class="f-col-label">Inquiries</div><ul class="f-links" style="margin-top:8px;"><li><a href="mailto:support@dimazo.in">support@dimazo.in</a></li><li><a href="javascript:void(0)" onclick="openBulkModal()">Bulk Order ↗</a></li></ul></div></div>
+</div>
+<div class="footer-bottom">
+<div class="f-copy">© DIMAZOFLY Kitchen Appliances Pvt. Ltd. 2026. All rights reserved.</div>
+<div class="f-copy" style="opacity:.15;">Rajkot · Gujarat · India</div>
+<div class="f-legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a></div>
+</div>
+</footer>
+
+<script>
+var PRODUCTS = [
+  {id:"spider-bottle",name:"SPIDER BOTTLE",slug:"Spider Bottle",tag:"Shaker Bottle",desc:"Boostio shaker — gym grade, leak-proof, BPA free",img:"https://z-cdn-media.chatglm.cn/files/5c780550-0a2d-43ef-a33b-5d4d926f4958.jpg?auth_key=1877798216-a478512afa5a4624bc66f7a4b0b98d58-0-57caeba2990f96d39b0352484eab0138",sectionTitle:"SPIDER<br>BOTTLE.",sectionDesc:"Boostio shaker bottle engineered for peak performance. Gym-grade construction with leak-proof seal, BPA-free materials, and ergonomic design for comfortable grip during intense workouts.",marqueeItems:["Spider Bottle","Boostio Shaker","Gym Grade","BPA Free","Leak Proof","Rajkot, India"],specs:[{val:"700ml",label:"Capacity"},{val:"BPA",label:"Free Material"},{val:"IPX6",label:"Leak Proof"}],bgColor:"#D4D4D4",textColor:"#1A1A1A",lineColor:"copper",ghostSide:"left",darkStage:false,layout:"section",modelPath:"./models/bottle.glb"},
+  {id:"kids-lunchbox",name:"KIDS LUNCH BOX",slug:"Kids Lunch Box",tag:"Kids Meal Box",desc:"Multi-compartment with utensils — Spider-Man edition",img:"https://z-cdn-media.chatglm.cn/files/72ab3b09-e02d-4a77-be98-bdc88ba24389.jpg?auth_key=1877798216-c9e4e02e117941dea8b55ce926a7af05-0-b3fece50b3afa8f435b5293e03696477",sectionTitle:"KIDS<br>BOX.",sectionDesc:"Vibrant multi-compartment lunch box designed for children. Includes spoon and fork set, Spider-Man edition lid, and food-safe materials that keep meals fresh and separated throughout the day.",marqueeItems:["Kids Meal Box","Multi-Compartment","Utensils Included","Food Safe","Spider-Man Edition"],specs:[{val:"4×",label:"Compartments"},{val:"Yes",label:"Utensils Set"},{val:"Safe",label:"Food Grade"}],bgColor:"#2D4263",textColor:"#F5F5F5",lineColor:"white",ghostSide:"right",darkStage:true,layout:"section",modelPath:"./models/lunchbox.glb"},
+  {id:"beast-bottle",name:"BEAST MODE BOTTLE",slug:"Gym Bottle",tag:"Gym Bottle",desc:"500ml gym bottle with ml/oz scale & carry loop",img:"https://z-cdn-media.chatglm.cn/files/00a43c29-b216-4f4c-afbb-ca5eb0f0b843.jpg?auth_key=1877798216-5b9e6ea58fe343fcb7851c8cb34ba3fd-0-06d317d0bc8f14a00a299da2edc8a5e5",sectionTitle:"BEAST<br>MODE.",sectionDesc:"Gym bottle with 500ml capacity, built-in measurement scale (ml/oz), secure lock seal, and ergonomic carry loop. Designed for athletes who demand performance from every piece of gear.",marqueeItems:["BEAST MODE ON","500ml Capacity","Measurement Scale","Carry Loop","Gym Grade","Lock Seal"],specs:[{val:"500ml",label:"Capacity"},{val:"ml/oz",label:"Dual Scale"},{val:"Lock",label:"Seal System"}],bgColor:"#B06D4D",textColor:"#1A1A1A",lineColor:"cobalt",ghostSide:"left",darkStage:false,layout:"section",modelPath:"./models/gym.glb"},
+  {id:"fresh-lunchbox",name:"FRESH LUNCH BOX",slug:"Fresh Box",tag:"Meal Box",desc:"Multi-compartment — keeps food fresh & separated",img:"https://z-cdn-media.chatglm.cn/files/91ffb7a2-cbc5-45b8-b69d-bfd2ef7c8557.jpg?auth_key=1877798216-6fe0d154dccd4ba5b84e482fbc7e6920-0-af064b20259534464a71ba196a859830",sectionDesc:"Multi-compartment lunch box that keeps meals fresh and separated.",specs:[{val:"3×",label:"Compartments"},{val:"Yes",label:"Utensils"},{val:"Safe",label:"Food Grade"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.1) 50%,rgba(10,10,10,.55) 100%)"},
+  {id:"food-chopper",name:"FOOD CHOPPER",slug:"Chopper",tag:"Kitchen Tool",desc:"Manual vegetable chopper — fast, safe, easy to clean",img:"https://z-cdn-media.chatglm.cn/files/30e16f4e-8f8e-4452-a4e7-ca0e736cadf3.jpg?auth_key=1877798216-28f7b0c68e7d4a5192edbc1ccb51922d-0-244f90bae62d3ed24e694f4b5c9952eb",sectionDesc:"Manual food chopper — chop vegetables in seconds.",specs:[{val:"Manual",label:"Operation"},{val:"Fast",label:"Chopping"},{val:"Safe",label:"No Blade Risk"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"gym-hydration-1",name:"GYM HYDRATION",slug:"Hydration",tag:"Hydration",desc:"Large capacity bottle — built for intense workouts",img:"https://z-cdn-media.chatglm.cn/files/18489e66-471a-4a1b-aff9-a65c0bb47273.jpg?auth_key=1877798216-45ff894d621f408098f53dcf5187cd93-0-5972f7b13141ad837c5fcd362f68518b",sectionDesc:"Large capacity gym hydration bottle with secure push-lock lid.",specs:[{val:"1L+",label:"Capacity"},{val:"Push",label:"Lock Lid"},{val:"Grip",label:"Ergonomic"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"tifin",name:"TIFIN BOX",slug:"Tifin",tag:"Meal Box",desc:"Premium tifin box",img:"./images/tifin.jpg",sectionDesc:"Premium tifin box.",specs:[{val:"Premium",label:"Quality"},{val:"Fresh",label:"Keep"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"burger-lunch",name:"BURGER LUNCH",slug:"Burger Lunch",tag:"Meal Box",desc:"Fun burger-themed lunch box",img:"/images/burgerlunch.jpg",sectionDesc:"Fun burger-themed lunch box for kids.",specs:[{val:"Fun",label:"Design"},{val:"Kids",label:"Friendly"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"bus-bottle",name:"BUS BOTTLE",slug:"Bus Bottle",tag:"Bottle",desc:"Unique bus-shaped water bottle",img:"/images/busbottle.jpg",sectionDesc:"Unique bus-shaped water bottle.",specs:[{val:"Unique",label:"Design"},{val:"BPA",label:"Free"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"freezer-6in1",name:"FREEZER 6 IN 1",slug:"Freezer 6in1",tag:"Storage",desc:"6-in-1 freezer storage set",img:"/images/freezer6.jpg",sectionDesc:"6-in-1 freezer storage set.",specs:[{val:"6×",label:"Pieces"},{val:"Freezer",label:"Safe"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"2in1-bottle",name:"2 IN 1 BOTTLE",slug:"2in1 Bottle",tag:"Bottle",desc:"Dual-purpose bottle",img:"/images/2in1botlle.jpg",sectionDesc:"Dual-purpose 2 in 1 bottle.",specs:[{val:"2×",label:"Purpose"},{val:"Smart",label:"Design"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"ameya-bottle",name:"AMEYA BOTTLE",slug:"Ameya Bottle",tag:"Bottle",desc:"Stylish Ameya series bottle",img:"/images/ameyabotlle.jpg",sectionDesc:"Stylish Ameya series bottle.",specs:[{val:"Stylish",label:"Design"},{val:"Premium",label:"Build"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"aroma-dis",name:"AROMA DIS",slug:"Aroma Dis",tag:"Aroma",desc:"Aroma dispenser",img:"/images/aroma dis.jpg",sectionDesc:"Aroma dispenser for fresh spaces.",specs:[{val:"Aroma",label:"Type"},{val:"Fresh",label:"Air"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"atom-shaker",name:"ATOM SHAKER",slug:"Atom Shaker",tag:"Shaker",desc:"Atom series protein shaker",img:"/images/atomshaker.jpg",sectionDesc:"Atom series protein shaker.",specs:[{val:"Atom",label:"Series"},{val:"Protein",label:"Shaker"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"baby-shipper",name:"BABY SHIPPER",slug:"Baby Shipper",tag:"Storage",desc:"Baby food storage set",img:"/images/babyshipper.jpg",sectionDesc:"Baby food storage shipper set.",specs:[{val:"Baby",label:"Safe"},{val:"Storage",label:"Set"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"cheese-greter",name:"CHEESE GRETER",slug:"Cheese Greter",tag:"Kitchen Tool",desc:"Stainless steel cheese grater",img:"/images/cheesegreter.jpg",sectionDesc:"Stainless steel cheese grater.",specs:[{val:"Steel",label:"Material"},{val:"Sharp",label:"Blades"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"chopper",name:"CHOPPER",slug:"Chopper",tag:"Kitchen Tool",desc:"Quick vegetable chopper",img:"/images/chopper.jpg",sectionDesc:"Quick vegetable chopper.",specs:[{val:"Quick",label:"Chop"},{val:"Safe",label:"Use"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"dd-lunch",name:"DOUBLE DECKER LUNCH",slug:"Double Decker",tag:"Meal Box",desc:"Double decker tiffin box",img:"/images/ddlunch.jpg",sectionDesc:"Double decker tiffin box.",specs:[{val:"2×",label:"Tiers"},{val:"Large",label:"Capacity"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"freezer-4in1",name:"FREEZER 4 IN 1",slug:"Freezer 4in1",tag:"Storage",desc:"4-in-1 freezer storage set",img:"images/freezer4.jpg",sectionDesc:"4-in-1 freezer storage set.",specs:[{val:"4×",label:"Pieces"},{val:"Freezer",label:"Safe"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"fruit-lunch",name:"FRUIT LUNCH BOX",slug:"Fruit Lunch",tag:"Meal Box",desc:"Fruit-themed lunch box",img:"/images/fruitlunch.jpg",sectionDesc:"Fruit-themed lunch box.",specs:[{val:"Fruit",label:"Theme"},{val:"Fresh",label:"Keep"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"gallon-bottle",name:"GALLON BOTTLE",slug:"Gallon Bottle",tag:"Bottle",desc:"1 gallon gym water bottle",img:"/images/gbotlle.jpg",sectionDesc:"1 gallon gym water bottle.",specs:[{val:"1 Gal",label:"Capacity"},{val:"Gym",label:"Grade"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"jelly-bottle",name:"JELLY BOTTLE",slug:"Jelly Bottle",tag:"Bottle",desc:"Jelly-inspired cute water bottle",img:"/images/jellybottle.jpg",sectionDesc:"Jelly-inspired cute water bottle.",specs:[{val:"Cute",label:"Design"},{val:"BPA",label:"Free"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"kitty-tumbler",name:"KITTY TUMBLER",slug:"Kitty Tumbler",tag:"Tumbler",desc:"Kitty-themed tumbler cup",img:"/images/kittytumbler.jpg",sectionDesc:"Kitty-themed tumbler cup.",specs:[{val:"Kitty",label:"Theme"},{val:"Tumbler",label:"Type"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"tokyo-lunch",name:"TOKYO LUNCH BOX",slug:"Tokyo Lunch",tag:"Meal Box",desc:"Tokyo-style compartment lunch box",img:"/images/llunch.jpg",sectionDesc:"Tokyo-style compartment lunch box.",specs:[{val:"Tokyo",label:"Style"},{val:"Multi",label:"Compartment"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"labubu-cup",name:"LABUBU CUP",slug:"Labubu Cup",tag:"Cup",desc:"Labubu character themed cup",img:"/images/lububucup.jpg",sectionDesc:"Labubu character themed cup.",specs:[{val:"Labubu",label:"Theme"},{val:"Cute",label:"Design"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"labubu-tumbler",name:"LABUBU TUMBLER",slug:"Labubu Tumbler",tag:"Tumbler",desc:"Labubu themed tumbler",img:"/images/lumtumbler.jpg",sectionDesc:"Labubu themed tumbler.",specs:[{val:"Labubu",label:"Theme"},{val:"Tumbler",label:"Type"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"tasty-lunch",name:"TASTY LUNCH BOX",slug:"Tasty Lunch",tag:"Meal Box",desc:"Tasty series lunch box",img:"/images/lunch.jpg",sectionDesc:"Tasty series lunch box.",specs:[{val:"Tasty",label:"Series"},{val:"Fresh",label:"Keep"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"onion-cutter",name:"ONION CUTTER",slug:"Onion Cutter",tag:"Kitchen Tool",desc:"Quick onion & vegetable cutter",img:"/images/onioncuttor.jpg",sectionDesc:"Quick onion & vegetable cutter.",specs:[{val:"Quick",label:"Cut"},{val:"No",label:"Tears"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"orange-jug",name:"ORANGE JUG",slug:"Orange Jug",tag:"Jug",desc:"Orange-themed water jug",img:"/images/orange jug.jpg",sectionDesc:"Orange-themed water jug.",specs:[{val:"Large",label:"Capacity"},{val:"Orange",label:"Theme"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"peanut-tumbler",name:"PEANUT TUMBLER",slug:"Peanut Tumbler",tag:"Tumbler",desc:"Peanut-themed cute tumbler",img:"/images/peanuttumbler.jpg",sectionDesc:"Peanut-themed cute tumbler.",specs:[{val:"Peanut",label:"Theme"},{val:"Cute",label:"Design"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"round-lunch",name:"ROUND LUNCH BOX",slug:"Round Lunch",tag:"Meal Box",desc:"Round shaped lunch box",img:"/images/rlunch.jpg",sectionDesc:"Round shaped lunch box.",specs:[{val:"Round",label:"Shape"},{val:"Compact",label:"Size"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"shaker",name:"SHAKER",slug:"Shaker",tag:"Shaker",desc:"Classic protein shaker bottle",img:"/images/shaker.jpg",sectionDesc:"Classic protein shaker bottle.",specs:[{val:"Classic",label:"Design"},{val:"Protein",label:"Shaker"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"shop-dis",name:"SHOP DIS",slug:"Shop Dis",tag:"Display",desc:"Shop display stand set",img:"/images/shop dis.jpg",sectionDesc:"Shop display stand set.",specs:[{val:"Display",label:"Type"},{val:"Shop",label:"Grade"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"spider-shaker",name:"SPIDER SHAKER",slug:"Spider Shaker",tag:"Shaker",desc:"Spider-themed shaker bottle",img:"/images/sshaker.jpg",sectionDesc:"Spider-themed shaker bottle.",specs:[{val:"Spider",label:"Theme"},{val:"Gym",label:"Grade"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"vacuum-bottle",name:"VACUUM BOTTLE",slug:"Vacuum Bottle",tag:"Bottle",desc:"Vacuum insulated water bottle",img:"/images/vaccum bottle.jpg",sectionDesc:"Vacuum insulated water bottle.",specs:[{val:"Vacuum",label:"Insulated"},{val:"Hot",label:"& Cold"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"vacuum-insulated",name:"VACUUM INSULATED",slug:"Vacuum Insulated",tag:"Bottle",desc:"Premium vacuum insulated bottle",img:"/images/vbottle.jpg",sectionDesc:"Premium vacuum insulated bottle.",specs:[{val:"Premium",label:"Quality"},{val:"24hr",label:"Hot/Cold"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"veg-cutter",name:"VEG CUTTER",slug:"Veg Cutter",tag:"Kitchen Tool",desc:"Manual vegetable cutter",img:"/images/veg cutter.jpg",sectionDesc:"Manual vegetable cutter.",specs:[{val:"Manual",label:"Type"},{val:"Fast",label:"Cutting"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"veg-cutter-1000",name:"VEG CUTTER 1000ML",slug:"Veg Cutter 1L",tag:"Kitchen Tool",desc:"1000ml vegetable cutter",img:"/images/vegc1000.jpg",sectionDesc:"1000ml vegetable cutter with container.",specs:[{val:"1000",label:"ml"},{val:"Large",label:"Capacity"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"vento-box",name:"VENTO BOX",slug:"Vento Box",tag:"Storage",desc:"Vento series storage box",img:"/images/vento.jpg",sectionDesc:"Vento series storage box.",specs:[{val:"Vento",label:"Series"},{val:"Storage",label:"Type"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"},
+  {id:"vacuum-water",name:"VACUUM WATER BOTTLE",slug:"Vacuum Water",tag:"Bottle",desc:"Vacuum water bottle — hot & cold",img:"/images/vwbottle.jpg",sectionDesc:"Vacuum water bottle — hot & cold.",specs:[{val:"Vacuum",label:"Tech"},{val:"Dual",label:"Temp"}],layout:"slider",slideAlign:"right",slideOverlay:"linear-gradient(225deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.08) 50%,rgba(10,10,10,.5) 100%)"},
+  {id:"yummy-lunch",name:"YUMMY LUNCH BOX",slug:"Yummy Lunch",tag:"Meal Box",desc:"Yummy series lunch box",img:"/images/y lunch.jpg",sectionDesc:"Yummy series lunch box.",specs:[{val:"Yummy",label:"Series"},{val:"Kids",label:"Love"}],layout:"slider",slideAlign:"left",slideOverlay:"linear-gradient(135deg,rgba(10,10,10,.65) 0%,rgba(10,10,10,.1) 45%,rgba(10,10,10,.6) 100%)"}
+];
+
+var sectionProducts = PRODUCTS.filter(function(p){ return p.layout === 'section'; }).slice(0, 3);
+var sliderProducts = PRODUCTS.filter(function(p){ return p.layout === 'slider'; });
+var hscrollProducts = PRODUCTS.slice(0, 6);
+var modelPaths = sectionProducts.map(function(p){ return p.modelPath || null; });
+
+/* Bulk Modal — ALL products */
+(function(){
+    var grid = document.getElementById('bulk-products-grid');
+    grid.innerHTML = PRODUCTS.map(function(p){
+        return '<div class="bp-card" data-pid="'+p.id+'"><div class="bp-card-img-wrap"><img src="'+p.img+'" class="bp-card-img" alt="'+p.name+'"><div class="bp-card-badge">Selected</div></div><div class="bp-card-info"><div class="bp-card-name">'+p.name+'</div><div class="bp-card-desc">'+p.desc+'</div><div class="bp-card-bottom"><div class="bp-qty"><button type="button" onclick="changeQty(this,-1)">−</button><span>0</span><button type="button" onclick="changeQty(this,1)">+</button></div><div class="bp-check" onclick="toggleCheck(this)" role="checkbox" aria-checked="false" tabindex="0"></div></div></div></div>';
+    }).join('');
+})();
+
+/* HUD */
+(function(){document.getElementById('hud').innerHTML=sectionProducts.map(function(p,i){return '<div class="hud-item'+(i===0?' active':'')+'">'+String(i+1).padStart(2,'0')+'</div>';}).join('');})();
+
+/* Nav */
+(function(){
+    var nl=document.getElementById('nav-links-desktop'),h='';
+    sectionProducts.forEach(function(p,i){h+='<a href="#s'+(i+1)+'" class="magnetic">'+p.slug+'</a>';});
+    if(sliderProducts.length)h+='<a href="#slider-section" class="magnetic">Collection</a>';
+    h+='<a href="#about" class="magnetic">About</a><a href="#contact" class="magnetic">Contact</a>';
+    nl.innerHTML=h;
+})();
+
+/* Mobile Menu */
+(function(){
+    var m=document.getElementById('mob-menu'),h='';
+    sectionProducts.forEach(function(p,i){h+='<a href="#s'+(i+1)+'">'+p.name+'</a>';});
+    if(sliderProducts.length)h+='<a href="#slider-section">Collection</a>';
+    h+='<a href="#about">About</a><a href="#" onclick="openBulkModal();return false;">Bulk Inquiry</a>';
+    m.innerHTML=h;
+})();
+
+/* Marquees & Sections */
+(function(){
+    var mqC=document.getElementById('marquees-container'),psC=document.getElementById('prod-sections-container'),mqH='',psH='';
+    var dirs=['fwd','rev','fwd','rev','fwd','rev'];
+    sectionProducts.forEach(function(p,i){
+        var d=dirs[i%dirs.length],items=(p.marqueeItems||[p.slug,p.tag]).map(function(t){return '<span class="mt-item">'+t+'</span><span class="mt-dot">·</span>';}).join('');
+        mqH+='<div class="marquee-band" id="mq'+(i+1)+'"><div class="marquee-track '+d+'">'+items+items+'</div></div>';
+        var dk=p.darkStage;
+        psH+='<section class="prod-section" id="s'+(i+1)+'" data-bg="'+p.bgColor+'" data-text="'+p.textColor+'">';
+        psH+='<div class="prod-ghost '+p.ghostSide+'">'+String(i+1).padStart(2,'0')+'</div>';
+        psH+='<div class="stage-container'+(dk?' dark-stage':'')+'"><div class="line-detail '+p.lineColor+'"></div>';
+        psH+='<div class="content'+(dk?' dark-text':'')+' rv"><span class="artifact-tag">ARTIFACT_'+String(i+1).padStart(2,'0')+' // '+p.tag+'</span>';
+        psH+='<h2 class="mag-head">'+p.sectionTitle+'</h2><p>'+p.sectionDesc+'</p>';
+        psH+='<div class="spec-row">'+p.specs.map(function(s){return '<div><div class="spec-val">'+s.val+'</div><div class="spec-label">'+s.label+'</div></div>';}).join('')+'</div>';
+        psH+='<button class="cta-stage magnetic" onclick="openBulkModal()">Inquire Now <span class="cta-arrow">→</span></button></div>';
+        psH+='<div class="visual-frame"><img src="'+p.img+'" class="artifact-img vel-img" alt="'+p.name+'"></div></div></section>';
+    });
+    mqC.innerHTML=mqH;psC.innerHTML=psH;
+})();
+
+/* Slider */
+(function(){
+    var wrap=document.getElementById('slider-wrap'),dotsC=document.getElementById('slider-dots'),totEl=document.getElementById('slider-total');
+    var total=sliderProducts.length;totEl.textContent=String(total).padStart(2,'0');
+    var sH='',dH='',gIdx=sectionProducts.length;
+    sliderProducts.forEach(function(p,i){
+        var gi=gIdx+i,ac=p.slideAlign==='right'?' right-align':'';
+        var ov=p.slideOverlay||'linear-gradient(135deg,rgba(10,10,10,.6) 0%,rgba(10,10,10,.1) 50%,rgba(10,10,10,.55) 100%)';
+        var spH=p.specs.map(function(s){return '<div><span class="ssv">'+s.val+'</span><span class="ssl">'+s.label+'</span></div>';}).join('');
+        var lastName=p.name.replace(/[^A-Z\s]/g,'').trim().split(' ').slice(-1)[0];
+        sH+='<div class="slide'+(i===0?' active':'')+'" data-idx="'+i+'"><div class="slide-bg" style="background-image:url(\''+p.img+'\');"></div><div class="slide-overlay" style="background:'+ov+';"></div><div class="slide-ghost">'+String(gi).padStart(2,'0')+'</div><div class="slide-content'+ac+'"><span class="slide-tag">ARTIFACT_'+String(gi).padStart(2,'0')+' // '+p.tag+'</span><h2 class="slide-title">'+(lastName||'ITEM')+'.</h2><p class="slide-desc">'+p.sectionDesc+'</p><div class="slide-specs">'+spH+'</div></div></div>';
+        dH+='<button class="slider-dot'+(i===0?' active':'')+'" data-idx="'+i+'"></button>';
+    });
+    wrap.innerHTML=sH;dotsC.innerHTML=dH;
+})();
+
+/* Horizontal Scroll — 6 products only */
+(function(){
+    var inner=document.getElementById('hscroll-inner'),html='';
+    hscrollProducts.forEach(function(p,i){
+        var isLast=(i===hscrollProducts.length-1);
+        html+='<div class="hcard'+(isLast?' style="margin-right:clamp(12px,4vw,8%);"':'')+'"><img src="'+p.img+'" class="hcard-img" alt="'+p.name+'"><div class="hcard-overlay"></div><div class="hcard-num">'+String(i+1).padStart(2,'0')+'</div><div class="hcard-bottom"><span class="hcard-tag">'+p.tag+'</span><div class="hcard-title">'+p.name+'</div><div class="hcard-text">'+p.desc+'</div></div></div>';
+    });
+    inner.innerHTML=html;
+})();
+
+/* Footer Products — 6 products only */
+(function(){
+    var col=document.getElementById('footer-products-col'),html='<div class="f-col-label">Products</div><ul class="f-links">';
+    hscrollProducts.forEach(function(p){html+='<li><a href="#s'+(sectionProducts.indexOf(p)+1)||'#slider-section'+'">'+p.slug+'</a></li>';});
+    html+='</ul>';col.innerHTML=html;
+})();
+
+/* Bulk Modal Logic */
+var bulkOpen=false,_bulkWheelHandler=null;
+function openBulkModal(){var m=document.getElementById('bulk-modal'),s=document.querySelector('.bulk-scroll');m.classList.add('open');m.setAttribute('aria-hidden','false');bulkOpen=true;document.body.style.overflow='hidden';if(window.lenisRef)window.lenisRef.stop();_bulkWheelHandler=function(e){e.stopPropagation();};s.addEventListener('wheel',_bulkWheelHandler,{passive:false});}
+function closeBulkModal(){var m=document.getElementById('bulk-modal'),s=document.querySelector('.bulk-scroll');m.classList.remove('open');m.setAttribute('aria-hidden','true');bulkOpen=false;document.body.style.overflow='';if(window.lenisRef)window.lenisRef.start();if(_bulkWheelHandler){s.removeEventListener('wheel',_bulkWheelHandler);_bulkWheelHandler=null;}}
+function toggleCheck(el){var ck=el.classList.contains('checked'),c=el.closest('.bp-card'),qs=c.querySelector('.bp-qty span');if(ck){el.classList.remove('checked');el.setAttribute('aria-checked','false');c.classList.remove('selected');qs.textContent='0';}else{el.classList.add('checked');el.setAttribute('aria-checked','true');c.classList.add('selected');if(parseInt(qs.textContent)===0)qs.textContent='1';}updateSelectedCount();}
+function changeQty(btn,dir){var qs=btn.parentElement.querySelector('span'),v=parseInt(qs.textContent)+dir;if(v<0)v=0;if(v>9999)v=9999;qs.textContent=v;var c=btn.closest('.bp-card'),ck=c.querySelector('.bp-check');if(v>0&&!ck.classList.contains('checked')){ck.classList.add('checked');ck.setAttribute('aria-checked','true');c.classList.add('selected');}if(v===0&&ck.classList.contains('checked')){ck.classList.remove('checked');ck.setAttribute('aria-checked','false');c.classList.remove('selected');}updateSelectedCount();}
+function updateSelectedCount(){var c=document.querySelectorAll('.bp-check.checked').length;document.getElementById('sel-count').textContent=c;document.getElementById('bulk-submit-btn').disabled=(c===0);}
+function getDateTime(){var d=new Date();return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function submitBulkInquiry(){var n=document.getElementById('b-name').value.trim(),p=document.getElementById('b-phone').value.trim(),e=document.getElementById('b-email').value.trim(),ci=document.getElementById('b-city').value.trim(),msg=document.getElementById('b-msg').value.trim();if(!n){showToast('Please enter your full name.');document.getElementById('b-name').focus();return;}if(!p){showToast('Please enter your phone number.');document.getElementById('b-phone').focus();return;}if(p.replace(/\D/g,'').length<10){showToast('Please enter a valid phone number.');document.getElementById('b-phone').focus();return;}var prods=[];document.querySelectorAll('.bp-card.selected').forEach(function(c){prods.push({name:c.querySelector('.bp-card-name').textContent,qty:c.querySelector('.bp-qty span').textContent});});if(!prods.length){showToast('Please select at least one product.');return;}var tq=0;prods.forEach(function(pr){tq+=parseInt(pr.qty);});var pl='';prods.forEach(function(pr,i){pl+='\n  '+String(i+1)+'. '+pr.name+'  →  Qty: '+pr.qty;});var wa='╔═══════════════════════════════════╗\n║     DIMAZOFLY — BULK INQUIRY      ║\n╚═══════════════════════════════════╝\n\n📅 Date: '+getDateTime()+'\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n👤 CUSTOMER INFORMATION\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n▸ Name: '+n+'\n▸ Phone: '+p+'\n'+(e?'▸ Email: '+e+'\n':'')+(ci?'▸ City: '+ci+'\n':'')+'\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛒 ORDER DETAILS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n▸ Products: '+prods.length+'\n▸ Total Qty: '+tq+'\n▸ Items:'+pl+'\n\n'+(msg?'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💬 ADDITIONAL NOTES\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'+msg+'\n\n':'')+'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📍 Source: dimazo.in\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';window.open('https://wa.me/917000418227?text='+encodeURIComponent(wa),'_blank');showToast('Opening WhatsApp with your inquiry...');setTimeout(function(){['b-name','b-phone','b-email','b-city','b-msg'].forEach(function(id){document.getElementById(id).value='';});document.querySelectorAll('.bp-card.selected').forEach(function(c){c.classList.remove('selected');c.querySelector('.bp-check').classList.remove('checked');c.querySelector('.bp-check').setAttribute('aria-checked','false');c.querySelector('.bp-qty span').textContent='0';});updateSelectedCount();closeBulkModal();},1500);}
+function showToast(msg){var t=document.getElementById('toast');t.innerHTML='<span class="toast-icon">✓</span> '+msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('show');},4500);}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&bulkOpen)closeBulkModal();if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('bp-check')){e.preventDefault();toggleCheck(e.target);}});
+document.querySelector('.bulk-content').addEventListener('click',function(e){e.stopPropagation();});
+document.querySelector('.bulk-scroll').addEventListener('click',function(e){e.stopPropagation();});
+
+window._modelPaths=modelPaths;
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const ham=document.getElementById('ham'),mobMenu=document.getElementById('mob-menu');
+const lenis=new Lenis({lerp:.1,duration:1.4});
+window.lenisRef=lenis;
+gsap.registerPlugin(ScrollTrigger);
+lenis.on('scroll',ScrollTrigger.update);
+gsap.ticker.add(t=>lenis.raf(t*1000));
+gsap.ticker.lagSmoothing(0);
+
+ham.addEventListener('click',()=>{ham.classList.toggle('open');mobMenu.classList.toggle('open');lenis[ham.classList.contains('open')?'stop':'start']();});
+mobMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{ham.classList.remove('open');mobMenu.classList.remove('open');lenis.start();}));
+
+gsap.to('#progress',{width:'100%',ease:'none',scrollTrigger:{trigger:'body',start:'top top',end:'bottom bottom',scrub:0}});
+
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+const hasCursor=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+if(hasCursor){
+    window.addEventListener('mousemove',e=>{gsap.to(cursor,{x:e.clientX-5,y:e.clientY-5,duration:0,ease:'none'});gsap.to(ring,{x:e.clientX-22,y:e.clientY-22,duration:.25,ease:'power2.out'});});
+    document.querySelectorAll('.magnetic').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{el.classList.add('mag-on');gsap.to(ring,{scale:1.5,duration:.4,ease:'expo.out'});});
+        el.addEventListener('mouseleave',()=>{el.classList.remove('mag-on');gsap.to(ring,{scale:1,duration:.4,ease:'expo.out'});gsap.to(el,{x:0,y:0,duration:.6,ease:'elastic.out(1,0.4)'});});
+        el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();gsap.to(el,{x:(e.clientX-r.left-r.width/2)*.25,y:(e.clientY-r.top-r.height/2)*.25,duration:.4,ease:'power2.out'});});
+    });
+}
+
+gsap.to('.hero-title',{opacity:1,scale:1,duration:2,ease:'expo.out',delay:.8});
+gsap.to('.hero-sub',{opacity:1,duration:1.2,ease:'expo.out',delay:1.4});
+gsap.to('.hero-scroll',{opacity:1,duration:1,ease:'expo.out',delay:1.8});
+
+const nav=document.getElementById('navbar');
+const hudItems=document.querySelectorAll('.hud-item');
+
+document.querySelectorAll('[data-bg]').forEach((sec)=>{
+    const bg=sec.dataset.bg,txt=sec.dataset.text;
+    const line=sec.querySelector('.line-detail');
+    const frame=sec.querySelector('.visual-frame');
+    const h2=sec.querySelector('.mag-head');
+    const sectionIdx=Array.from(document.querySelectorAll('.prod-section')).indexOf(sec);
+    ScrollTrigger.create({trigger:sec,start:'top 50%',
+        onEnter:()=>{document.body.style.backgroundColor=bg;document.body.style.color=txt;if(line)gsap.to(line,{scaleX:1,duration:1.5,ease:'expo.out'});if(sectionIdx>=0&&sectionIdx<hudItems.length)hudItems.forEach((h,hi)=>h.classList.toggle('active',hi===sectionIdx));const isDark=bg==='#2D4263';nav.classList.toggle('scrolled-dark',isDark);nav.classList.toggle('scrolled-light',!isDark);},
+        onEnterBack:()=>{document.body.style.backgroundColor=bg;document.body.style.color=txt;if(sectionIdx>=0&&sectionIdx<hudItems.length)hudItems.forEach((h,hi)=>h.classList.toggle('active',hi===sectionIdx));const isDark=bg==='#2D4263';nav.classList.toggle('scrolled-dark',isDark);nav.classList.toggle('scrolled-light',!isDark);}
+    });
+    if(frame)gsap.to(frame,{y:-100,scrollTrigger:{trigger:sec,start:'top bottom',end:'bottom top',scrub:1}});
+    if(h2&&hasCursor)sec.addEventListener('mousemove',e=>{const x=(e.clientX-innerWidth/2)*.05,y=(e.clientY-innerHeight/2)*.05;gsap.to(h2,{x,y,duration:1,ease:'power2.out'});});
+});
+
+lenis.on('scroll',e=>{const v=e.velocity;gsap.to('.vel-img',{skewX:v*.01,scaleY:1+Math.abs(v)*.0005,duration:.4});gsap.to('.slide-bg',{skewX:v*.003,duration:.4});});
+ScrollTrigger.create({onUpdate(self){const v=self.getVelocity();if(v>500)gsap.to(nav,{y:-100,duration:.7,ease:'power4.out'});else if(v<-300)gsap.to(nav,{y:0,duration:.7,ease:'power4.out'});}});
+
+gsap.utils.toArray('.rv').forEach(el=>{gsap.fromTo(el,{opacity:0,y:28},{opacity:1,y:0,duration:1.4,ease:'expo.out',scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});});
+gsap.utils.toArray('.bc').forEach((el,i)=>{gsap.fromTo(el,{opacity:0,y:40,scale:.97},{opacity:1,y:0,scale:1,duration:1.3,delay:i*.1,ease:'expo.out',scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});});
+gsap.utils.toArray('.hcard').forEach((el,i)=>{gsap.fromTo(el,{opacity:0,y:24,rotateY:6},{opacity:1,y:0,rotateY:0,duration:1.1,delay:.12*i,ease:'expo.out',scrollTrigger:{trigger:'#hscroll-wrap',start:'top 80%',toggleActions:'play none none none'}});});
+
+const hI=document.getElementById('hscroll-inner'),hW=document.getElementById('hscroll-wrap');
+if(hI&&hW){const tw=hI.scrollWidth-innerWidth;gsap.to(hI,{x:-tw,ease:'none',scrollTrigger:{trigger:hW,start:'top top',end:()=>'+='+(tw+200),pin:true,scrub:1,anticipatePin:1}});}
+
+document.querySelectorAll('.stat-v').forEach(el=>{const t=el.textContent.trim(),n=parseFloat(t);if(!isNaN(n)){gsap.fromTo({v:0},{v:n},{duration:2.5,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 85%'},onUpdate:function(){el.textContent=(t.includes('%'))?Math.round(this.targets()[0].v)+'%':Math.round(this.targets()[0].v)+(t.includes('+')?'+':'');}});}});
+ScrollTrigger.create({onUpdate:self=>{const v=Math.abs(self.getVelocity()),s=Math.max(1,Math.min(4,1+v/2000));document.querySelectorAll('.marquee-track').forEach(t=>{t.style.animationDuration=(t.classList.contains('fwd')?30/s:38/s)+'s';});}});
+gsap.to('#bg-video',{scrollTrigger:{trigger:'#hero',start:'top top',end:'bottom top',scrub:true},opacity:0,scale:1.15});
+
+/* ═══════════════════════════════════════
+   🔥 ENHANCED THREE.JS — AMAZING ANIMATION
+   ═══════════════════════════════════════ */
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,1000);
+cam.position.z=10;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('webgl'),antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+/* Enhanced lighting for dramatic effect */
+scene.add(new THREE.AmbientLight(0xffffff,3));
+const pl1=new THREE.PointLight(0xffffff,80);pl1.position.set(5,5,5);scene.add(pl1);
+const pl2=new THREE.PointLight(0xB06D4D,50);pl2.position.set(-5,-3,4);scene.add(pl2);
+const pl3=new THREE.PointLight(0x2D4263,40);pl3.position.set(0,6,-2);scene.add(pl3);
+const pl4=new THREE.PointLight(0xffffff,30);pl4.position.set(0,0,8);scene.add(pl4);
+/* Dynamic accent lights */
+const pl5=new THREE.PointLight(0xe156bc,25);pl5.position.set(-4,2,6);scene.add(pl5);
+const pl6=new THREE.PointLight(0xdbcb8a,20);pl6.position.set(4,-2,6);scene.add(pl6);
+
+/* Orbiting lights for extra drama */
+const orbitLight1=new THREE.PointLight(0xffffff,15);
+const orbitLight2=new THREE.PointLight(0xB06D4D,15);
+scene.add(orbitLight1);scene.add(orbitLight2);
+
+const models=[];
+const loader=new GLTFLoader();
+const paths=window._modelPaths||[];
+const SCALE=0.55;
+const matBase=new THREE.MeshPhysicalMaterial({color:0x6B6B6B,metalness:.88,roughness:.12,clearcoat:1,clearcoatRoughness:.02,envMapIntensity:1.5,transparent:true,opacity:1,reflectivity:1});
+const fG=[new THREE.CylinderGeometry(.65,.65,3.4,64,1),new THREE.BoxGeometry(2.2,1.3,1.3,4,4,4),new THREE.CylinderGeometry(.55,.7,3.0,64,1)];
+
+/* Floating ring geometries around models */
+const ringGeo=new THREE.TorusGeometry(2.2,.015,16,100);
+const ringMat=new THREE.MeshBasicMaterial({color:0xB06D4D,transparent:true,opacity:0});
+const rings=[];
+for(let i=0;i<3;i++){
+    const ring=new THREE.Mesh(ringGeo.clone(),ringMat.clone());
+    ring.rotation.x=Math.PI/2+i*0.3;
+    ring.rotation.y=i*0.5;
+    scene.add(ring);
+    rings.push(ring);
+}
+
+function ss(x,a,b){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);}
+
+paths.forEach((p,i)=>{
+    const onLoad=(g)=>{
+        let m;
+        if(g){m=g.scene;const b=new THREE.Box3().setFromObject(m);m.position.sub(b.getCenter(new THREE.Vector3()));m.traverse(c=>{if(c.isMesh){c.material=matBase.clone();c.material.transparent=true;}});}
+        else{m=new THREE.Mesh(fG[i],matBase.clone());m.material.transparent=true;}
+        const gr=new THREE.Group();gr.add(m);gr.scale.set(0,0,0);gr.position.set(i%2===0?-8:8,0,0);scene.add(gr);models[i]=gr;
+        if(models.filter(Boolean).length===paths.length)initTM();
+    };
+    loader.load(p,onLoad,undefined,()=>onLoad(null));
+});
+
+/* Track mouse for enhanced interaction */
+let mouseX=0,mouseY=0;
+if(hasCursor){
+    window.addEventListener('mousemove',e=>{
+        mouseX=(e.clientX/innerWidth-.5)*2;
+        mouseY=(e.clientY/innerHeight-.5)*2;
+    });
+}
+
+function initTM(){
+    for(var i=0;i<3;i++){
+        var el=document.getElementById('s'+(i+1));
+        if(!el||!models[i])continue;
+        var m=models[i],dir=i%2===0?'ltr':'rtl';
+        ScrollTrigger.create({trigger:el,start:'top bottom',end:'bottom top',scrub:1.2,onUpdate(self){
+            const p=self.progress;
+            /* Enhanced visibility curve — sharper entrance */
+            const visIn=ss(p,.05,.15), visOut=1-ss(p,.85,.95);
+            const vis=visIn*visOut;
+            const s=SCALE*vis;
+            m.scale.set(Math.max(0,s),Math.max(0,s),Math.max(0,s));
+
+            /* Dramatic sweeping path */
+            const xS=dir==='ltr'?-9:9, xE=dir==='ltr'?9:-9;
+            /* Figure-8 style x movement */
+            const fig8=Math.sin(p*Math.PI*2)*1.5;
+            m.position.x=xS+(xE-xS)*p+fig8*(vis);
+            /* Exaggerated floating arc */
+            m.position.y=-Math.sin(p*Math.PI)*1.2+Math.sin(p*Math.PI*4)*.3*(vis);
+            /* Depth wobble */
+            m.position.z=Math.sin(p*Math.PI*3)*.8*(vis);
+
+            /* Multi-axis spinning — much more dramatic */
+            m.rotation.y=p*Math.PI*5;
+            m.rotation.x=Math.sin(p*Math.PI*4)*.35*(vis);
+            m.rotation.z=Math.cos(p*Math.PI*3)*.2*(vis);
+
+            m.traverse(ch=>{if(ch.isMesh&&ch.material)ch.material.opacity=Math.min(1,vis*1.5);});
+
+            /* Animate corresponding ring */
+            if(rings[i]){
+                rings[i].material.opacity=vis*.15;
+                rings[i].position.copy(m.position);
+                rings[i].scale.setScalar(vis*1.2);
+            }
+        }});
+    }
+}
+
+/* Continuous animation loop — adds life even when not scrolling */
+const clock=new THREE.Clock();
+
+function animate(){
+    requestAnimationFrame(animate);
+    const t=clock.getElapsedTime();
+
+    /* Orbit lights around scene */
+    orbitLight1.position.set(Math.sin(t*.7)*6,Math.cos(t*.5)*3,Math.sin(t*.3)*4+3);
+    orbitLight2.position.set(Math.cos(t*.6)*-5,Math.sin(t*.4)*-4,Math.cos(t*.8)*3+3);
+
+    /* Animate accent lights subtly */
+    pl5.position.x=Math.sin(t*.3)*-4;
+    pl5.position.y=Math.cos(t*.4)*2;
+    pl6.position.x=Math.cos(t*.35)*4;
+    pl6.position.y=Math.sin(t*.45)*-2;
+
+    /* Animate rings — continuous slow rotation */
+    rings.forEach((ring,i)=>{
+        if(ring.material.opacity>0.001){
+            ring.rotation.z+=.003*(i%2===0?1:-1);
+            ring.rotation.x+=.002;
+        }
+    });
+
+    /* Enhanced mouse interaction — stronger parallax + tilt */
+    if(hasCursor){
+        models.forEach((m,i)=>{
+            if(m&&m.scale.x>.05){
+                const speed=.15+i*.03;
+                const targetRY=m.rotation.y+mouseX*speed*.08;
+                const targetRX=m.rotation.x+mouseY*speed*.05;
+                /* Breathing scale effect */
+                const breath=1+Math.sin(t*1.5+i*2)*.015;
+                m.scale.x*=breath;
+                m.scale.y*=breath;
+                m.scale.z*=breath;
+            }
+        });
+    }
+
+    /* Subtle camera breathing */
+    cam.position.x=Math.sin(t*.2)*.15;
+    cam.position.y=Math.cos(t*.15)*.1;
+    cam.lookAt(0,0,0);
+
+    renderer.render(scene,cam);
+}
+animate();
+
+window.addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+
+/* Particles */
+const pc=document.getElementById('particles'),ctx=pc.getContext('2d');
+pc.width=innerWidth;pc.height=innerHeight;
+const pCount=hasCursor?50:20;
+const pts=Array.from({length:pCount},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.2+.3,vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12,o:Math.random()*.05+.015}));
+const CD=120;
+function drawP(){
+    ctx.clearRect(0,0,pc.width,pc.height);
+    for(let i=0;i<pts.length;i++){for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<CD){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle='rgba(26,26,26,'+(1-d/CD)*.025+')';ctx.lineWidth=.5;ctx.stroke();}}}
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(26,26,26,'+p.o+')';ctx.fill();});
+    requestAnimationFrame(drawP);
+}drawP();
+window.addEventListener('resize',()=>{pc.width=innerWidth;pc.height=innerHeight;});
+
+/* Slider */
+const slides=document.querySelectorAll('.slide'),dots=document.querySelectorAll('.slider-dot');
+const progBar=document.getElementById('sl-prog'),counter=document.querySelector('.slider-counter .cur');
+let curSlide=0,isAnimating=false,autoTimer=null;
+const TOTAL=slides.length;
+
+function goToSlide(idx,direction){
+    if(isAnimating||idx===curSlide)return;
+    isAnimating=true;if(autoTimer)autoTimer.kill();
+    const dir=direction||(idx>curSlide?1:-1);
+    const outSlide=slides[curSlide],inSlide=slides[idx];
+    gsap.set(progBar,{scaleX:0});
+    const tl=gsap.timeline({defaults:{ease:'power3.inOut'},onComplete:()=>{curSlide=idx;isAnimating=false;startAuto();}});
+    tl.to(outSlide,{opacity:0,scale:1.06,x:-dir*60,duration:1},0);
+    gsap.set(inSlide,{opacity:0,visibility:'visible',scale:.96,x:dir*60});
+    tl.to(inSlide,{opacity:1,scale:1,x:0,duration:1},.05);
+    const ghostIn=inSlide.querySelector('.slide-ghost');
+    if(ghostIn)tl.fromTo(ghostIn,{scale:.7,opacity:0},{scale:1,opacity:1,duration:1.6,ease:'expo.out'},.15);
+    const txtEls=inSlide.querySelectorAll('.slide-tag,.slide-title,.slide-desc,.slide-specs');
+    tl.fromTo(txtEls,{y:40,opacity:0},{y:0,opacity:1,duration:.85,ease:'expo.out',stagger:.07},.3);
+    slides.forEach(s=>{s.classList.remove('active');s.style.visibility='hidden';});
+    inSlide.classList.add('active');inSlide.style.visibility='visible';
+    dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+    counter.textContent=String(idx+1).padStart(2,'0');
+}
+function nextSlide(){goToSlide((curSlide+1)%TOTAL,1);}
+function prevSlide(){goToSlide((curSlide-1+TOTAL)%TOTAL,-1);}
+function startAuto(){if(autoTimer)autoTimer.kill();gsap.set(progBar,{scaleX:0});autoTimer=gsap.to(progBar,{scaleX:1,duration:5,ease:'none',onComplete:nextSlide});}
+
+dots.forEach(d=>d.addEventListener('click',()=>goToSlide(+d.dataset.idx)));
+document.getElementById('sl-next').addEventListener('click',nextSlide);
+document.getElementById('sl-prev').addEventListener('click',prevSlide);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')nextSlide();if(e.key==='ArrowLeft')prevSlide();});
+
+const slSection=document.getElementById('slider-section');
+if(hasCursor){
+    slSection.addEventListener('mouseenter',()=>{if(autoTimer)autoTimer.pause();});
+    slSection.addEventListener('mouseleave',()=>{if(autoTimer)autoTimer.resume();});
+    slSection.addEventListener('mousemove',e=>{
+        const r=slSection.getBoundingClientRect();
+        const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+        const ab=slides[curSlide].querySelector('.slide-bg');
+        if(ab)gsap.to(ab,{x:x*-18,y:y*-12,duration:1.2,ease:'power2.out'});
+    });
+}
+
+let tsX=0,tsY=0;
+slSection.addEventListener('touchstart',e=>{tsX=e.touches[0].clientX;tsY=e.touches[0].clientY;},{passive:true});
+slSection.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tsX,dy=e.changedTouches[0].clientY-tsY;if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){dx<0?nextSlide():prevSlide();}},{passive:true});
+
+if(slides.length>0){
+    const ft=slides[0].querySelectorAll('.slide-tag,.slide-title,.slide-desc,.slide-specs');
+    gsap.fromTo(ft,{y:40,opacity:0},{y:0,opacity:1,duration:1,ease:'expo.out',stagger:.08,delay:.3});
+    gsap.fromTo(slides[0].querySelector('.slide-ghost'),{scale:.7,opacity:0},{scale:1,opacity:1,duration:2,ease:'expo.out',delay:.2});
+}
+startAuto();
+
+document.querySelectorAll('.prod-ghost').forEach(el=>{
+    gsap.to(el,{yPercent:el.classList.contains('left')?-15:-10,ease:'none',scrollTrigger:{trigger:el,start:'top bottom',end:'bottom top',scrub:2}});
+});
+</script>
+</body>
+</html>
